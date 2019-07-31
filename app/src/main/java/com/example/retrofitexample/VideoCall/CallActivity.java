@@ -33,6 +33,7 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Toast;
 
+import com.example.retrofitexample.Chat.ChatService;
 import com.example.retrofitexample.R;
 
 import java.io.IOException;
@@ -46,6 +47,9 @@ import com.example.retrofitexample.VideoCall.AppRTCClient.RoomConnectionParamete
 import com.example.retrofitexample.VideoCall.AppRTCClient.SignalingParameters;
 import com.example.retrofitexample.VideoCall.PeerConnectionClient.DataChannelParameters;
 import com.example.retrofitexample.VideoCall.PeerConnectionClient.PeerConnectionParameters;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
 import org.webrtc.CameraEnumerator;
@@ -64,13 +68,16 @@ import org.webrtc.VideoFileRenderer;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
 
+import static com.example.retrofitexample.Chat.ChatService.currentRoomNo;
+
 /**
  * Activity for peer connection call setup, call waiting
  * and call view.
  */
 public class CallActivity extends Activity implements AppRTCClient.SignalingEvents,
                                                       PeerConnectionClient.PeerConnectionEvents,
-                                                      CallFragment.OnCallEvents {
+                                                      CallFragment.OnCallEvents,
+                                                      ChatService.ServiceCallbacks{
   private static final String TAG = "CallRTCClient";
 
   public static final String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";
@@ -195,6 +202,14 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     Thread.setDefaultUncaughtExceptionHandler(new UnhandledExceptionHandler(this));
+
+    Log.d(TAG, "onCreate: video call started");
+
+    // 영상 통화 액티비티를 입장해 있는 방의 번호와 일치시킨다.
+    Intent getroomnointent = getIntent();
+    int roomNo = getroomnointent.getIntExtra("roomNo", -1);
+    currentRoomNo = roomNo;
+    Log.d(TAG, "onCreate: received room number: " + currentRoomNo);
 
     // Set window styles for fullscreen-window size. Needs to be done before
     // adding content.
@@ -969,4 +984,11 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   public void onPeerConnectionError(final String description) {
     reportError(description);
   }
+
+  public void ChatdoSomething(){
+    Log.d(TAG, "ChatdoSomething: callback disconnect");
+
+    disconnect();
+  }
+
 }

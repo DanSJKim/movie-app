@@ -150,9 +150,6 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
     private static final int REMOVE_FAVORITE_INDEX = 0;
     private static boolean commandLineRun;
 
-    private ImageButton addFavoriteButton;
-    private EditText roomEditText;
-    private ListView roomListView;
     private SharedPreferences sharedPref;
     private String keyprefResolution;
     private String keyprefFps;
@@ -162,9 +159,8 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
     private String keyprefAudioBitrateValue;
     private String keyprefRoomServerUrl;
     private String keyprefRoom;
-    private String keyprefRoomList;
-    private ArrayList<String> roomList;
-    private ArrayAdapter<String> adapter;
+
+    String uniqueID;
 
 
 
@@ -750,13 +746,15 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
                         jo.put("message", message);
                         jo.put("date", date);
                         jo.put("time", time);
+                        if(mode == 4){
+                            uniqueID = UUID.randomUUID().toString();
+                            jo.put("callID", uniqueID);
+                        }
 
                         dos.writeUTF(jo.toString());
 
                         if(mode == 4){
                             webrtcstart();
-                        }else{
-
                         }
 
                         /* 핸들러 */
@@ -1045,7 +1043,6 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         keyprefAudioBitrateValue = getString(R.string.pref_startaudiobitratevalue_key);
         keyprefRoomServerUrl = getString(R.string.pref_room_server_url_key);
         keyprefRoom = getString(R.string.pref_room_key);
-        keyprefRoomList = getString(R.string.pref_room_list_key);
 
         requestPermissions();
     }
@@ -1054,33 +1051,6 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.connect_menu, menu);
         return true;
-    }
-
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        if (v.getId() == R.id.room_listview) {
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            menu.setHeaderTitle(roomList.get(info.position));
-            String[] menuItems = getResources().getStringArray(R.array.roomListContextMenu);
-            for (int i = 0; i < menuItems.length; i++) {
-                menu.add(Menu.NONE, i, i, menuItems[i]);
-            }
-        } else {
-            super.onCreateContextMenu(menu, v, menuInfo);
-        }
-    }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        if (item.getItemId() == REMOVE_FAVORITE_INDEX) {
-            AdapterView.AdapterContextMenuInfo info =
-                    (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-            roomList.remove(info.position);
-            adapter.notifyDataSetChanged();
-            return true;
-        }
-
-        return super.onContextItemSelected(item);
     }
 
     @Override
@@ -1134,9 +1104,8 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         Log.d(TAG, "onPermissionsGranted: ");
 
         // 영통 자동 연결
-        String uniqueID = UUID.randomUUID().toString();
+        Log.d(TAG, "onPermissionsGranted: uniqueID: " + uniqueID);
         connectToRoom(uniqueID, false, false, false, 0);
-
 
         // If an implicit VIEW intent is launching the app, go directly to that URL.
         final Intent intent = getIntent();
@@ -1519,6 +1488,9 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
                 }
             }
 
+            Log.d(TAG, "connectToRoom: currentRoomNo: " + roomNo);
+            intent.putExtra("roomNo", roomNo);
+
             startActivityForResult(intent, CONNECTION_REQUEST);
         }
     }
@@ -1553,15 +1525,5 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
                 }
             };
 
-    private final View.OnClickListener addFavoriteListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            String newRoom = roomEditText.getText().toString();
-            if (newRoom.length() > 0 && !roomList.contains(newRoom)) {
-                adapter.add(newRoom);
-                adapter.notifyDataSetChanged();
-            }
-        }
-    };
 
 }

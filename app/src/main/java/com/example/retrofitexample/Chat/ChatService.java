@@ -25,6 +25,7 @@ import com.example.retrofitexample.Chat.Model.MessageListContent;
 import com.example.retrofitexample.LoginRegister.SharedPref;
 import com.example.retrofitexample.R;
 import com.example.retrofitexample.VideoCall.CallActivity;
+import com.example.retrofitexample.VideoCall.ReceiveCallActivity;
 import com.facebook.stetho.inspector.protocol.module.Database;
 
 import org.json.JSONException;
@@ -97,7 +98,6 @@ public class ChatService extends Service {
                     .setContentTitle("알람시작")
                     .setContentText("알람음이 재생됩니다.")
                     .setSmallIcon(R.mipmap.ic_launcher)
-
                     .build();
 
             startForeground(1, notification);
@@ -231,6 +231,7 @@ public class ChatService extends Service {
                             String mode = jsonObject.getString("mode");
                             int modeToInt = Integer.parseInt(mode);
 
+
                             // 사용자가 현재 보고 있는 액티비티
                             Log.d(TAG, "run: currentRoomNo: " + currentRoomNo);
 
@@ -242,8 +243,20 @@ public class ChatService extends Service {
                                 if(modeToInt == 4){
                                     Log.d(TAG, "run: mode is: " + modeToInt);
 
-                                    Intent intent = new Intent(ChatService.this, CallActivity.class);
-                                    startActivity(intent);
+                                    Log.d(TAG, "run: mode is: " + modeToInt);
+                                    String callID = jsonObject.getString("callID");
+
+                                    String senderEmail = jsonObject.getString("myEmail");
+                                    String senderProfile = jsonObject.getString("myProfile");
+
+                                    Intent callintent = new Intent(ChatService.this, ReceiveCallActivity.class);
+                                    callintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    callintent.putExtra("senderEmail", senderEmail);
+                                    callintent.putExtra("senderProfile", senderProfile);
+                                    callintent.putExtra("callID", callID);
+                                    callintent.putExtra("roomNo", roomNoToInt);
+                                    startActivity(callintent);
+
                                 }
                             }
 
@@ -312,9 +325,18 @@ public class ChatService extends Service {
 
                             if(modeToInt == 4){
                                 Log.d(TAG, "run: mode is: " + modeToInt);
+                                String callID = jsonObject.getString("callID");
 
-                                Intent intent = new Intent(ChatService.this, CallActivity.class);
-                                startActivity(intent);
+                                String senderEmail = jsonObject.getString("myEmail");
+                                String senderProfile = jsonObject.getString("myProfile");
+
+                                Intent callintent = new Intent(ChatService.this, ReceiveCallActivity.class);
+                                callintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                callintent.putExtra("senderEmail", senderEmail);
+                                callintent.putExtra("senderProfile", senderProfile);
+                                callintent.putExtra("callID", callID);
+                                callintent.putExtra("roomNo", roomNoToInt);
+                                startActivity(callintent);
                             }
 
                         } catch (JSONException e) {

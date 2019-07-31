@@ -152,6 +152,9 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
 
                     int count = response.body().getCount();
 
+                    Log.d(TAG, "onResponse: data.get(finalI).getRoomNo()" + finalI + " : " +data.get(finalI).getRoomNo());
+                    Log.d(TAG, "onResponse: data.get(finalI).getTitle()" + finalI + " : " +data.get(finalI).getTitle());
+
                     //내 채팅내용
                     MessageListContent messageListContent = new MessageListContent(data.get(finalI).getRoomNo(), data.get(finalI).getImg_path(), data.get(finalI).getTitle(), data.get(finalI).getContent(), data.get(finalI).getChatTime(), count);
                     mChatArrayList.add(messageListContent);
@@ -165,6 +168,11 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
                     Log.d("checkMessage Error!", t.getMessage());
                 }
             });
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -176,10 +184,11 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
         call.enqueue(new Callback<MessageListResponse>() {
             @Override
             public void onResponse(Call<MessageListResponse> call, final Response<MessageListResponse> response) {
-                Log.d("TAG", "onResponse: " + response.body().getChatroomlist());
+                Log.d(TAG, "chat room list onResponse: " + response.body().getChatroomlist());
 
                 ArrayList<MessageListContent> data = new ArrayList<>(Arrays.asList(response.body().getChatroomlist())); //BoardItem객체들을 받아온 배열을 리스트로 바꿔준다.
                 Log.d(TAG, "onResponse: data size: " + data.size());
+                Log.d(TAG, "onResponse: data.get(0).getTitle(): " + data.get(0).getTitle());
 
                 // 채팅 방 번호를 가져온 후 안 읽은 메세지를 카운트해서 아이템에 추가한다.
                 countNewMessages(data, loggedUseremail);
@@ -495,8 +504,6 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause() called");
-
-
 
         // Unbind from service
         if (isService) {
