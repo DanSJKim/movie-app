@@ -29,6 +29,10 @@ android {
             universalApk false
         }
     }
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
+    }
 }
 
 dependencies {
@@ -53,5 +57,6 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:16.0.0'
     implementation 'com.google.maps.android:android-maps-utils:0.5'
     implementation 'com.facebook.stetho:stetho:1.5.0'
-
+    implementation 'org.webrtc:google-webrtc:1.0.+' // webrtc
+    implementation files('libs/autobanh.jar')
 }

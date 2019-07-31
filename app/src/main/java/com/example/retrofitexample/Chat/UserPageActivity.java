@@ -88,6 +88,8 @@ public class UserPageActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                // 방 번호를 가져온 후 채팅방 인텐트로 넘겨 준다.
+                getRoomNo(loggedUseremail, yourEmail);
             }
         });
     }
