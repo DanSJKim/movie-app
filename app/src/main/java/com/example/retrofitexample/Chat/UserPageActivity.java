@@ -89,7 +89,7 @@ public class UserPageActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 // 방 번호를 가져온 후 채팅방 인텐트로 넘겨 준다.
-                getRoomNo(loggedUseremail, yourEmail);
+                getRoomNoVideoCall(loggedUseremail, yourEmail);
             }
         });
     }
@@ -112,6 +112,7 @@ public class UserPageActivity extends AppCompatActivity {
                 intent.putExtra("yourEmail", yourEmail);
                 intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
+                finish();
             }
 
             @Override
@@ -119,8 +120,35 @@ public class UserPageActivity extends AppCompatActivity {
 
             }
         });
+    }
 
+    // 방 번호 가져오기
+    private void getRoomNoVideoCall(String myEmail, final String yourEmail){
 
+        Api api = ApiClient.getClient().create(Api.class);
+        Call<Room> call = api.CheckRoomExistOrNot(myEmail, yourEmail);
+
+        call.enqueue(new Callback<Room>() {
+            @Override
+            public void onResponse(Call<Room> call, Response<Room> response) {
+                Log.d(TAG, "onResponse: roomNo: " + response.body().getRoomNo());
+
+                int roomNo = response.body().getRoomNo();
+
+                Intent intent = new Intent(UserPageActivity.this, ChatRoomActivity.class);
+                intent.putExtra("roomNo", roomNo);
+                intent.putExtra("yourEmail", yourEmail);
+                intent.putExtra("videoCall", 1);
+                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onFailure(Call<Room> call, Throwable t) {
+
+            }
+        });
     }
 
     // 채팅 할 상대방 이메일을 이용해서 해당 유저의 사진, 이름, 이메일을 서버에서 가져오기

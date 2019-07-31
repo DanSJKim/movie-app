@@ -43,6 +43,8 @@ import com.example.retrofitexample.R;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.UUID;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -75,6 +77,8 @@ public class ConnectActivity extends Activity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    Log.d(TAG, "onCreate: ");
 
     // Get setting keys.
     PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
@@ -215,32 +219,39 @@ public class ConnectActivity extends Activity {
       int requestCode, String[] permissions, int[] grantResults) {
     if (requestCode == PERMISSION_REQUEST) {
       String[] missingPermissions = getMissingPermissions();
-      if (missingPermissions.length != 0) {
-        // User didn't grant all the permissions. Warn that the application might not work
-        // correctly.
-        new AlertDialog.Builder(this)
-            .setMessage(R.string.missing_permissions_try_again)
-            .setPositiveButton(R.string.yes,
-                (dialog, id) -> {
-                  // User wants to try giving the permissions again.
-                  dialog.cancel();
-                  requestPermissions();
-                })
-            .setNegativeButton(R.string.no,
-                (dialog, id) -> {
-                  // User doesn't want to give the permissions.
-                  dialog.cancel();
-                  onPermissionsGranted();
-                })
-            .show();
-      } else {
+//      if (missingPermissions.length != 0) {
+//        // User didn't grant all the permissions. Warn that the application might not work
+//        // correctly.
+//        new AlertDialog.Builder(this)
+//            .setMessage(R.string.missing_permissions_try_again)
+//            .setPositiveButton(R.string.yes,
+//                (dialog, id) -> {
+//                  // User wants to try giving the permissions again.
+//                  dialog.cancel();
+//                  requestPermissions();
+//                })
+//            .setNegativeButton(R.string.no,
+//                (dialog, id) -> {
+//                  // User doesn't want to give the permissions.
+//                  dialog.cancel();
+//                  onPermissionsGranted();
+//                })
+//            .show();
+//      } else {
         // All permissions granted.
         onPermissionsGranted();
-      }
+      //}
     }
   }
 
   private void onPermissionsGranted() {
+    Log.d(TAG, "onPermissionsGranted: ");
+
+    // 영통 자동 연결
+    String uniqueID = UUID.randomUUID().toString();
+    connectToRoom(uniqueID, false, false, false, 0);
+
+
     // If an implicit VIEW intent is launching the app, go directly to that URL.
     final Intent intent = getIntent();
     if ("android.intent.action.VIEW".equals(intent.getAction()) && !commandLineRun) {
@@ -249,6 +260,7 @@ public class ConnectActivity extends Activity {
       boolean useValuesFromIntent =
           intent.getBooleanExtra(CallActivity.EXTRA_USE_VALUES_FROM_INTENT, false);
       String room = sharedPref.getString(keyprefRoom, "");
+      Log.d(TAG, "onPermissionsGranted: connectToRoom");
       connectToRoom(room, true, loopback, useValuesFromIntent, runTimeMs);
     }
   }
@@ -662,7 +674,8 @@ public class ConnectActivity extends Activity {
   private final OnClickListener connectListener = new OnClickListener() {
     @Override
     public void onClick(View view) {
-      connectToRoom(roomEditText.getText().toString(), false, false, false, 0);
+      String uniqueID = UUID.randomUUID().toString();
+      connectToRoom(uniqueID, false, false, false, 0);
     }
   };
 }

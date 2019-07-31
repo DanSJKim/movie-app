@@ -24,6 +24,7 @@ import com.example.retrofitexample.Chat.Model.DatabaseHelper;
 import com.example.retrofitexample.Chat.Model.MessageListContent;
 import com.example.retrofitexample.LoginRegister.SharedPref;
 import com.example.retrofitexample.R;
+import com.example.retrofitexample.VideoCall.CallActivity;
 import com.facebook.stetho.inspector.protocol.module.Database;
 
 import org.json.JSONException;
@@ -157,7 +158,7 @@ public class ChatService extends Service {
             try {
                 Log.d(TAG, "SocketClient run: ");
                 // 채팅 서버에 접속 ( 연결 )  ( 서버쪽 ip와 포트 )
-                socket = new Socket("192.168.0.101",6075);
+                socket = new Socket("192.168.0.70",6075);
 
                 // 메세지를 서버에 전달 할 수 있는 통로 ( 만들기 )
                 out = new DataOutputStream(socket.getOutputStream());
@@ -227,6 +228,8 @@ public class ChatService extends Service {
                             jsonObject = new JSONObject(receivedMsg);
                             String roomNo = jsonObject.getString("roomNo");
                             int roomNoToInt = Integer.parseInt(roomNo);
+                            String mode = jsonObject.getString("mode");
+                            int modeToInt = Integer.parseInt(mode);
 
                             // 사용자가 현재 보고 있는 액티비티
                             Log.d(TAG, "run: currentRoomNo: " + currentRoomNo);
@@ -235,6 +238,13 @@ public class ChatService extends Service {
                             if((roomNoToInt == currentRoomNo) || (currentRoomNo == 0)){
                                 Log.d(TAG, "run: is chatlist or chatroom " + serviceCallbacks);
                                 serviceCallbacks.ChatdoSomething();
+
+                                if(modeToInt == 4){
+                                    Log.d(TAG, "run: mode is: " + modeToInt);
+
+                                    Intent intent = new Intent(ChatService.this, CallActivity.class);
+                                    startActivity(intent);
+                                }
                             }
 
                             // 채팅방이나 채팅목록 화면이 아닐 때 알림을 실행
@@ -300,20 +310,28 @@ public class ChatService extends Service {
                                 } //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) 끝
                             } //if((roomNoToInt != currentRoomNo) && (currentRoomNo != 0)) 끝
 
+                            if(modeToInt == 4){
+                                Log.d(TAG, "run: mode is: " + modeToInt);
+
+                                Intent intent = new Intent(ChatService.this, CallActivity.class);
+                                startActivity(intent);
+                            }
+
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
 
                             //Log.e("My App", "Could not parse malformed JSON: \"" + receivedMsg + "\"");
 
+
                     }
+
                 }
             }catch (Exception e){
                 e.printStackTrace();
             }
         }
     } //ReceiveThread
-
 
 
     class RunningThread extends Thread{
@@ -348,5 +366,6 @@ public class ChatService extends Service {
             }
         }
     } //RunningThread
+
 
 }
