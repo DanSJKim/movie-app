@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.retrofitexample">
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- Vibration to alert user when form data is incorrect. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- 부팅을 확인 할수 있는 퍼미션 등록 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <application
+        android:name=".MyApplication"
+        android:allowBackup="true"
+        android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme.NoActionBar"
+        android:usesCleartextTraffic="true">
+        <activity android:name=".Chat.ChatImageDetailActivity"></activity>
+
+        <service
+            android:name=".Chat.ChatService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity android:name=".Service.MainActivity" />
+
+        <service
+            android:name=".Service.ConnectionService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity android:name=".Chat.UserPageActivity" />
+        <activity
+            android:name=".Chat.ChatRoomActivity"
+            android:windowSoftInputMode="stateHidden|adjustResize"
+            android:launchMode="singleTop"/>
+        <activity android:name=".Map.TheaterDetailWebviewActivity" />
+        <activity android:name=".Chat.ChatActivity"/>
+        <activity android:name=".Map.TheaterDetailActivity" />
+
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyB0-8dbNtTqog_h0RP7emGZ7gtZWqTm4Vo" />
+
+        <activity android:name=".Map.MapActivity" />
+        <activity android:name=".MovieSearch.MovieDetailActivity" />
+        <activity android:name=".MovieSearch.MovieSearchActivity" />
+        <activity android:name=".BoxOffice.CalendarActivity" />
+        <activity android:name=".Board.BoardUpdateDetailActivity" />
+        <activity android:name=".Board.BoardImageEditActivity" />
+        <activity
+            android:name=".Board.BoardLikeListActivity"
+            android:theme="@android:style/Theme.Dialog" />
+        <activity
+            android:name=".Board.Comment.BoardCommentUpdateActivity"
+            android:theme="@android:style/Theme.Dialog" />
+        <activity android:name=".Board.Comment.BoardCommentActivity" />
+        <activity android:name=".Image.ImageActivity" />
+        <activity android:name=".Board.BoardUpdateActivity" />
+        <activity android:name=".Board.BoardUploadActivity" />
+        <activity android:name=".Board.BoardActivity" />
+        <activity android:name=".MyPage.MyPageUpdateActivity" />
+        <activity android:name=".MyPage.MyPageActivity" />
+        <activity android:name=".LoginRegister.MainActivity" />
+        <activity android:name=".LoginRegister.RegisterActivity" />
+        <activity android:name=".BoxOffice.ProfileActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

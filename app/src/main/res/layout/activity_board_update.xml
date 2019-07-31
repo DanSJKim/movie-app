@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <!--<ImageView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="300dp"-->
+        <!--android:layout_marginTop="10dp"-->
+        <!--android:src="@drawable/ic_add_to_photos_black_24dp"-->
+        <!--android:id="@+id/ivBoardUpdateImage"/>-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_weight="1">
+
+        <!--<android.support.v4.view.ViewPager-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:id="@+id/board_viewPager"-->
+            <!--android:layout_weight="1"/>-->
+
+        <!--<android.support.design.widget.TabLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:id="@+id/board_tab_layout"-->
+            <!--app:tabBackground="@drawable/tab_selector"-->
+            <!--app:tabGravity="center"-->
+            <!--app:tabIndicatorHeight="0dp"-->
+            <!--android:layout_weight="10"-->
+            <!--/>-->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <android.support.v7.widget.RecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/rvBoardUpdateImageList">
+            </android.support.v7.widget.RecyclerView>
+
+            <ProgressBar
+                android:id="@+id/updateProgressBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:layout_marginTop="100dp"
+                android:layout_marginLeft="150dp"
+                android:layout_marginRight="150dp"
+                />
+
+
+
+        </FrameLayout>
+
+
+
+    </LinearLayout>
+
+
+    <EditText
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:hint="글 입력"
+        android:id="@+id/etBoardUpdateContent"/>
+
+    <Button
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Update"
+        android:id="@+id/btnBoardUpdate"
+        android:background="#FFFFFF"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        android:id="@+id/btnBoardUpdateBack"
+        android:background="#FFFFFF"/>
+
+</LinearLayout>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#3F51B5"
+
+    android:orientation="vertical">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="일일박스오피스 날짜 조회"
+        android:textColor="#FFFFFF"
+        android:textAlignment="center"
+        android:textSize="23sp"
+        android:layout_gravity="center"
+        android:layout_marginTop="50dp"/>
+
+    <LinearLayout
+        android:layout_marginTop="30dp"
+        android:layout_gravity="center"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#FFFFFF">
+
+
+
+        <CalendarView
+            android:id="@+id/cvCalendarView"
+            android:layout_width="wrap_content"
+            android:layout_height="320dp"
+            android:minDate="01/01/2004"
+            ></CalendarView>
+
+    </LinearLayout>
+
+
+
+</LinearLayout>
