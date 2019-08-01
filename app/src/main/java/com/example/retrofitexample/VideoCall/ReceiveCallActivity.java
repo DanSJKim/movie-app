@@ -1,6 +1,7 @@
 package com.example.retrofitexample.VideoCall;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -26,9 +27,11 @@ import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.retrofitexample.BoxOffice.ProfileActivity;
 import com.example.retrofitexample.Chat.ChatRoomActivity;
 import com.example.retrofitexample.Chat.ChatService;
 import com.example.retrofitexample.Chat.Model.Room;
+import com.example.retrofitexample.GlideApp;
 import com.example.retrofitexample.R;
 import com.example.retrofitexample.Retrofit.Api;
 import com.example.retrofitexample.Retrofit.ApiClient;
@@ -86,31 +89,42 @@ public class ReceiveCallActivity extends AppCompatActivity implements ChatServic
     SendThread send;
 
     int roomNo; // 방 번호 저장
+    String senderEmail; // 발신자 이메일
+    String senderProfile; // 발신자 프로필 사진
 
     private ChatService myService; // 서비스
+
+    public static Activity _Receive_Call_Activity; // 액티비티를 담은 변수를 선언해서 CallActivity에서 이 액티비티를 종료할 수 있도록 만들어 준다.
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_receive_call);
+        Log.d(TAG, "onCreate: ");
 
+        _Receive_Call_Activity = ReceiveCallActivity.this;
 
         Intent intent = getIntent();
-        String senderEmail = intent.getStringExtra("senderEmail");
-        String senderProfile = intent.getStringExtra("senderProfile");
+        senderEmail = intent.getStringExtra("senderEmail"); // 영상 통화 건 사람
+        senderProfile = intent.getStringExtra("senderProfile");
         roomNo = intent.getIntExtra("roomNo", -1);
         uniqueID = intent.getStringExtra("callID");
-        currentRoomNo = -3; // 수신메시지용 방번호
+
 
         Log.d(TAG, "onCreate: senderEmail: " + senderEmail);
         Log.d(TAG, "onCreate: senderProfile: " + senderProfile);
         Log.d(TAG, "onCreate: callID: " + uniqueID);
-        Log.d(TAG, "onCreate: currentRoomNo: " + currentRoomNo);
 
         ivSenderProfile = (ImageView) findViewById(R.id.ivRecieveCallProfile);
         tvSenderEmail = (TextView) findViewById(R.id.tvReceiveCallName);
         ivAllowCall = (ImageView) findViewById(R.id.ivAllowCall);
         ivHangUp = (ImageView) findViewById(R.id.ivHangUp);
+
+        GlideApp.with(ReceiveCallActivity.this).load(senderProfile)
+                .override(300,400)
+                .into(ivSenderProfile);
+        tvSenderEmail.setText(senderEmail);
 
         ivAllowCall.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -138,7 +152,8 @@ public class ReceiveCallActivity extends AppCompatActivity implements ChatServic
                 final String time = mFormat2.format(mDate);
                 Log.d(TAG, "onClick: roomNo: " + roomNo);
 
-                send = new SendThread(socket, 5, roomNo, loggedUseremail, senderEmail, "영상통화 취소", date, time); // ChatService에서 생성한 클라이언트 소켓 변수
+                // 영상 통화 수신 거절
+                send = new SendThread(socket, 6, roomNo, senderEmail, senderEmail, "영상통화 취소", date, time); // ChatService에서 생성한 클라이언트 소켓 변수
                 send.start();
             }
         });
@@ -147,7 +162,21 @@ public class ReceiveCallActivity extends AppCompatActivity implements ChatServic
 
     @Override
     public void ChatdoSomething() {
+        Log.d(TAG, "ChatdoSomething: finish activity");
 
+        // Unbind from service
+        if (isService) {
+            currentRoomNo = -1;
+            Log.d(TAG, "onStop: isService:" + isService);
+
+            Log.d(TAG, "onStop: unbind");
+            myService.setCallbacks(null); // unregister
+            unbindService(conn);
+            //isService = false;
+
+        }
+        // close this activity
+        finish();
     }
 
     // 내부 클래스  ( 메세지 전송용 )
@@ -198,9 +227,7 @@ public class ReceiveCallActivity extends AppCompatActivity implements ChatServic
                     jo.put("date", date);
                     jo.put("time", time);
                     dos.writeUTF(jo.toString());
-
                     finish();
-
                 }
 
             }catch (Exception e){
@@ -634,6 +661,10 @@ public class ReceiveCallActivity extends AppCompatActivity implements ChatServic
             intent.putExtra(CallActivity.EXTRA_RUNTIME, runTimeMs);
             intent.putExtra(CallActivity.EXTRA_DATA_CHANNEL_ENABLED, dataChannelEnabled);
 
+            // CallActivity에서 통화 종료 시 데이터베이스에 종료 메세지를 저장하기 위해 통화 발신자 이메일, 방 번호를 함께 보내 준다.
+            intent.putExtra("roomNo", roomNo);
+            intent.putExtra("senderEmail", senderEmail);
+
             if (dataChannelEnabled) {
                 intent.putExtra(CallActivity.EXTRA_ORDERED, ordered);
                 intent.putExtra(CallActivity.EXTRA_MAX_RETRANSMITS_MS, maxRetrMs);
@@ -717,26 +748,29 @@ public class ReceiveCallActivity extends AppCompatActivity implements ChatServic
     @Override
     protected  void onResume(){
         super.onResume();
+        Log.d(TAG, "onResume: ");
+
+        currentRoomNo = -3; // 수신메시지용 방번호. 해당 방의 상대방에게 메세지 읽음을 알려주는 메세지를 보내지 않기 위해 방번호를 따로 만듬.
 
         // bind to Service
-        Intent intent = new Intent(this, ChatService.class);
-        bindService(intent, conn, Context.BIND_AUTO_CREATE);
+        Intent intent2 = new Intent(this, ChatService.class);
+        bindService(intent2, conn, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected  void onStart(){
+        super.onStart();
+        Log.d(TAG, "onStart: ");
+
+
     }
 
     @Override
     protected  void onPause(){
         super.onPause();
+        Log.d(TAG, "onPause: ");
 
-        // Unbind from service
-        if (isService) {
-            currentRoomNo = -1;
-            Log.d(TAG, "onPause: isService:" + isService);
 
-            Log.d(TAG, "onPause: unbind");
-            myService.setCallbacks(null); // unregister
-            unbindService(conn);
-            //isService = false;
-        }
     }
 
     @Override
@@ -744,6 +778,6 @@ public class ReceiveCallActivity extends AppCompatActivity implements ChatServic
         super.onStop();
         Log.d(TAG, "onStop() called");
 
-        finish();
+
     }
 }

@@ -245,41 +245,61 @@ public class ChatService extends Service {
                             if((roomNoToInt == currentRoomNo) || (currentRoomNo == 0)){
                                 Log.d(TAG, "run: is chatlist or chatroom " + serviceCallbacks);
                                 serviceCallbacks.ChatdoSomething();
-
-                                if(modeToInt == 4){
-                                    Log.d(TAG, "run: mode is: " + modeToInt);
-
-                                    String callID = jsonObject.getString("callID");
-
-                                    String senderEmail = jsonObject.getString("myEmail");
-                                    String senderProfile = jsonObject.getString("myProfile");
-
-                                    Intent callintent = new Intent(ChatService.this, ReceiveCallActivity.class);
-                                    callintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    callintent.putExtra("senderEmail", senderEmail);
-                                    callintent.putExtra("senderProfile", senderProfile);
-                                    callintent.putExtra("callID", callID);
-                                    callintent.putExtra("roomNo", roomNoToInt);
-                                    startActivity(callintent);
-
-                                }
                             }
 
-                            // 영상통화 화면일 때
-                            if(currentRoomNo == -2){
+                            // 영상채팅 메세지를 수신한 사람이 영상통화 화면일 때
+                            if(currentRoomNo == -2 && modeToInt == 5){
                                 Log.d(TAG, "run: is callactivity");
                                 String senderEmail = jsonObject.getString("myEmail");
+                                String receiverEmail = jsonObject.getString("yourEmail");
+                                String message = jsonObject.getString("message");
+                                String date = jsonObject.getString("date");
+                                String time = jsonObject.getString("time");
+                                Log.d(TAG, "run: senderEmail: " + senderEmail);
+                                Log.d(TAG, "run: receiverEmail: " + receiverEmail);
+
+
+                                // mode, roomno, myemail, youremail, message, date, time
+                                // 통화를 종료시킨 사람이 sender 종료 알림을 받는 사람이 receiver
+                                sendMessageToMySQL(5, roomNoToInt, senderEmail, receiverEmail, "영상통화 종료", date, time);
+                                serviceCallbacks.ChatdoSomething();
+
+                            // 영상채팅 메세지 수신 거절 메세지를 수신했을 때
+                            }else if(currentRoomNo == -2 && modeToInt == 6){
+                                Log.d(TAG, "run: is callactivity");
+                                String senderEmail = jsonObject.getString("myEmail");
+                                String receiverEmail = jsonObject.getString("yourEmail");
+                                String message = jsonObject.getString("message");
+                                String date = jsonObject.getString("date");
+                                String time = jsonObject.getString("time");
+                                Log.d(TAG, "run: senderEmail: " + senderEmail);
+                                Log.d(TAG, "run: receiverEmail: " + receiverEmail);
+
+
+                                // mode, roomno, myemail, youremail, message, date, time
+                                // 통화를 종료시킨 사람이 sender 종료 알림을 받는 사람이 receiver
+                                sendMessageToMySQL(5, roomNoToInt, senderEmail, receiverEmail, "영상통화 취소", date, time);
+                                serviceCallbacks.ChatdoSomething();
+                            }
+
+                            // 영상통화 수신 화면, 취소 메세지일 경우
+                            if(currentRoomNo == -3 && modeToInt == 5){
+                                Log.d(TAG, "run: is receivecallactivity");
+                                String senderEmail = jsonObject.getString("myEmail");
+                                String receiverEmail = jsonObject.getString("yourEmail");
+                                String message = jsonObject.getString("message");
                                 String date = jsonObject.getString("date");
                                 String time = jsonObject.getString("time");
 
-                                sendMessageToMySQL(5, roomNoToInt, loggedUseremail, senderEmail, "영상통화 취소", date, time);
+                                // mode, roomno, myemail, youremail, message, date, time
+                                sendMessageToMySQL(5, roomNoToInt, senderEmail, receiverEmail, "영상통화 취소", date, time);
 
                                 serviceCallbacks.ChatdoSomething();
 
                             }
 
-                            // 채팅방이나 채팅목록 화면이 아닐 때 알림을 실행
-                            if((roomNoToInt != currentRoomNo) && (currentRoomNo != 0) && (currentRoomNo != -2)){
+                            // 채팅방이나 채팅목록 화면이 아닐 때, 영상통화 발신, 취소 메세지가 아닐 때 알림을 실행
+                            if((roomNoToInt != currentRoomNo) && (currentRoomNo != 0) && (currentRoomNo != -2) && (modeToInt != 4) && (modeToInt != 3) && (modeToInt != 5) && (modeToInt != 6)){
                                 Log.d(TAG, "run: no chatlist, chatroom");
 
                                 String myEmail = jsonObject.getString("myEmail"); // 메세지 작성자의 이메일

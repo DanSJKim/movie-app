@@ -38,13 +38,22 @@ import android.widget.Toast;
 
 import com.example.retrofitexample.Chat.ChatActivity;
 import com.example.retrofitexample.Chat.ChatService;
+import com.example.retrofitexample.Chat.Model.Room;
 import com.example.retrofitexample.R;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.RuntimeException;
+import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
+
+import com.example.retrofitexample.Retrofit.Api;
+import com.example.retrofitexample.Retrofit.ApiClient;
 import com.example.retrofitexample.VideoCall.AppRTCAudioManager.AudioDevice;
 import com.example.retrofitexample.VideoCall.AppRTCAudioManager.AudioManagerEvents;
 import com.example.retrofitexample.VideoCall.AppRTCClient.RoomConnectionParameters;
@@ -72,8 +81,15 @@ import org.webrtc.VideoFileRenderer;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 import static com.example.retrofitexample.BootReceiver.isService;
+import static com.example.retrofitexample.BoxOffice.ProfileActivity.loggedUseremail;
 import static com.example.retrofitexample.Chat.ChatService.currentRoomNo;
+import static com.example.retrofitexample.Chat.ChatService.dos;
+import static com.example.retrofitexample.Chat.ChatService.socket;
 
 /**
  * Activity for peer connection call setup, call waiting
@@ -83,7 +99,7 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
                                                       PeerConnectionClient.PeerConnectionEvents,
                                                       CallFragment.OnCallEvents,
                                                       ChatService.ServiceCallbacks{
-  private static final String TAG = "CallRTCClient";
+  private static final String TAG = "CallActivity";
 
   public static final String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";
   public static final String EXTRA_URLPARAMETERS = "org.appspot.apprtc.URLPARAMETERS";
@@ -139,6 +155,8 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   private static final int CAPTURE_PERMISSION_REQUEST_CODE = 1;
 
   private ChatService myService; // 서비스
+
+  SendThread send; // 채팅 종료 메세지 보내주기 위한 스레드
 
   // List of mandatory application permissions.
   private static final String[] MANDATORY_PERMISSIONS = {"android.permission.MODIFY_AUDIO_SETTINGS",
@@ -203,6 +221,10 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   private CpuMonitor cpuMonitor;
 
   int roomNo;
+  String senderEmail;
+  String receiverEmail;
+
+  ReceiveCallActivity RCA;
   @Override
   // TODO(bugs.webrtc.org/8580): LayoutParams.FLAG_TURN_SCREEN_ON and
   // LayoutParams.FLAG_SHOW_WHEN_LOCKED are deprecated.
@@ -210,14 +232,22 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     Thread.setDefaultUncaughtExceptionHandler(new UnhandledExceptionHandler(this));
-
     Log.d(TAG, "onCreate: video call started");
+
+    RCA = (ReceiveCallActivity) ReceiveCallActivity._Receive_Call_Activity;
+
 
     // 영상 통화 액티비티를 입장해 있는 방의 번호와 일치시킨다.
     Intent getroomnointent = getIntent();
     roomNo = getroomnointent.getIntExtra("roomNo", -1);
+    senderEmail = getroomnointent.getStringExtra("senderEmail"); // 영상 통화 발신자
+    receiverEmail = getroomnointent.getStringExtra("yourEmail"); // 영상 통화 수신자
+
+
     currentRoomNo = -2; // 통화용 방번호
-    Log.d(TAG, "onCreate: received room number: " + currentRoomNo);
+    Log.d(TAG, "onCreate: received room number: " + roomNo);
+    Log.d(TAG, "onCreate: senderEmail: " + senderEmail);
+    Log.d(TAG, "onCreate: receiverEmail: " + receiverEmail);
 
     // Set window styles for fullscreen-window size. Needs to be done before
     // adding content.
@@ -546,13 +576,39 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     // Unbind from service
     if (isService) {
       currentRoomNo = -1;
-      Log.d(TAG, "onPause: isService:" + isService);
+      Log.d(TAG, "onPause: callactivity isService:" + isService);
 
-      Log.d(TAG, "onPause: unbind");
+      Log.d(TAG, "onPause: callactivity unbind");
       myService.setCallbacks(null); // unregister
       unbindService(conn);
       //isService = false;
+
+      // 통화 종료 시 ReceiveCallActivity(통화 대기 액티비티)를 종료한다.
+      if(RCA != null){
+        RCA.finish();
+      }
     }
+  }
+
+  public void sendMessageToMySQL(final int mode, final int roomNo, final String myEmail, final String yourEmail, final String message, final String date, final String time){
+    Log.d(TAG, "sendMessageToMySQL: mode: " + mode);
+
+    Api api = ApiClient.getClient().create(Api.class);
+
+    Call<Room> call = api.sendMessage(mode, roomNo, myEmail, yourEmail, message, date, time);
+    call.enqueue(new Callback<Room>() {
+
+      @Override
+      public void onResponse(Call<Room> call, final Response<Room> response) {
+        Log.d("TAG", "onResponse: " + response.body().getResult());
+
+      }
+
+      @Override
+      public void onFailure(Call<Room> call, Throwable t) {
+        Log.d("ToMySQL Error",t.getMessage());
+      }
+    });
   }
 
   @Override
@@ -569,7 +625,100 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   // CallFragment.OnCallEvents interface implementation.
   @Override
   public void onCallHangUp() {
+    Log.d(TAG, "onCallHangUp: ");
+
+          // 현재 시간 받아오기
+      long mNow;
+      Date mDate;
+      mNow = System.currentTimeMillis();
+      mDate = new Date(mNow);
+      // 메세지 전송시 날짜, 시간 생성
+      SimpleDateFormat mFormat = new SimpleDateFormat("yyyy년 MM월 dd일 E요일", Locale.KOREAN);
+      final String date = mFormat.format(mDate);
+      SimpleDateFormat mFormat2 = new SimpleDateFormat("aa hh:mm", Locale.KOREAN);
+      final String time = mFormat2.format(mDate);
+
+      // 통화 종료 시 종료 메세지를 데이터 베이스에 저장한다.
+      //sendMessageToMySQL(5, roomNo, senderEmail, senderEmail, "영상통화 종료", date, time);
+
+      // 통화 종료를 누르는 사용자가 발신자와 동일할 경우 영상 통화 수신자에게 종료 메세지 전송
+      if(loggedUseremail.equals(senderEmail)){
+        Log.d(TAG, "onCallHangUp: 1");
+
+        //receiverEmail = 영상 통화 수신자
+
+        send = new SendThread(socket, 5, roomNo, senderEmail, receiverEmail, "영상통화 종료", date, time);
+        send.start();
+
+      // 통화 종료를 누르는 사용자가 수신자일 경우 영상 통화 발신자에게 종료 메세지 전송
+      }else{
+        Log.d(TAG, "onCallHangUp: 2");
+
+        send = new SendThread(socket, 5, roomNo, senderEmail, senderEmail, "영상통화 종료", date, time);
+        send.start();
+
+      }
+
+
+
     disconnect();
+  }
+
+  // 내부 클래스  ( 메세지 전송용 )
+  class SendThread extends Thread{
+    Socket socket;
+    int mode;
+    int roomNo;
+    String myEmail;
+    String yourEmail;
+    String message;
+    String date;
+    String time;
+    DataOutputStream output;
+
+
+    public SendThread(Socket socket, int mode, int roomNo, String myEmail, String yourEmail, String message, String date, String time){
+      Log.d(TAG, "SendThread: ");
+
+      Log.d(TAG, "SendThread: mode: " + mode);
+      Log.d(TAG, "SendThread: message: " + message);
+      this.mode = mode;
+      this.socket = socket;
+      this.roomNo = roomNo;
+      this.myEmail = myEmail;
+      this.yourEmail = yourEmail;
+      this.message = message;
+      this.date = date;
+      this.time = time;
+      this.output = dos; // ChatService의 아웃풋스트림 변수를 가져온다.
+    }
+
+    // 서버로 메세지 전송
+    public  void run(){
+      try {
+        if (message != null){
+          Log.d(TAG, "SendThread run: ");
+
+          JSONObject jo = new JSONObject();
+
+          Log.d(TAG, "SendThread run: mode: " + mode);
+
+          jo.put("mode", mode);
+          jo.put("roomNo", roomNo);
+          jo.put("myEmail", myEmail);
+          //jo.put("myProfile", profileImage);
+          jo.put("yourEmail", yourEmail);
+          jo.put("message", message);
+          jo.put("date", date);
+          jo.put("time", time);
+          dos.writeUTF(jo.toString());
+          finish();
+        }
+
+      }catch (Exception e){
+        e.printStackTrace();
+      }
+    }
   }
 
   @Override
@@ -703,9 +852,12 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     } else {
       setResult(RESULT_CANCELED);
     }
+    Log.d(TAG, "disconnect: chat finish()");
+
     finish();
   }
 
+  
   private void disconnectWithErrorMessage(final String errorMessage) {
     if (commandLineRun || !activityRunning) {
       Log.e(TAG, "Critical error: " + errorMessage);

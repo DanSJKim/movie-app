@@ -75,8 +75,6 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
         Board = (ImageView) findViewById(R.id.ivBoard);
 
         //db = new DatabaseHelper(getApplicationContext());
-        currentRoomNo = 0;
-        Log.d(TAG, "run: currentRoomNo: " + currentRoomNo);
 
         initViews();
 
@@ -264,53 +262,64 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
                 try {
                     jsonObject = new JSONObject(msg.obj.toString());
 
+                    String mode = jsonObject.getString("mode");
+                    int modeToInt = Integer.parseInt(mode);
                     String roomNo = jsonObject.getString("roomNo");
-                    String myEmail = jsonObject.getString("myEmail");
-                    String myProfile = jsonObject.getString("myProfile");
-                    String yourEmail = jsonObject.getString("yourEmail");
-                    String message = jsonObject.getString("message");
-                    String date = jsonObject.getString("date");
-                    String time = jsonObject.getString("time");
 
-                    int roomNoToInt = Integer.parseInt(roomNo);
+                    if(modeToInt != 3){
+                        String myEmail = jsonObject.getString("myEmail");
+                        String myProfile = jsonObject.getString("myProfile");
+                        String yourEmail = jsonObject.getString("yourEmail");
+                        String message = jsonObject.getString("message");
+                        String date = jsonObject.getString("date");
+                        String time = jsonObject.getString("time");
 
-                    Log.d(TAG, "handleMessage: chat list mChatArrayList.size(): " + mChatArrayList.size());
+                        int roomNoToInt = Integer.parseInt(roomNo);
 
-                    // 채팅 목록에 기존 방이 있는지 여부
-                    int cnt = 0;
-                    for(int i = 0 ; i < mChatArrayList.size() ; i++){
+                        Log.d(TAG, "handleMessage: chat list mChatArrayList.size(): " + mChatArrayList.size());
 
-                        Log.d(TAG, "handleMessage: getroomNo: " + mChatArrayList.get(i).getRoomNo());
-                        Log.d(TAG, "handleMessage: roomNo: " + roomNo);
+                        // 채팅 목록에 기존 방이 있는지 여부
+                        int cnt = 0;
+                        for(int i = 0 ; i < mChatArrayList.size() ; i++){
 
-                        // 서버에서 받은 방 번호와 채팅리스트의 방 번호와 번호를 비교해서 같으면 기존 방이 있는 것
-                        if(mChatArrayList.get(i).getRoomNo() == roomNoToInt){
+                            Log.d(TAG, "handleMessage: getroomNo: " + mChatArrayList.get(i).getRoomNo());
+                            Log.d(TAG, "handleMessage: roomNo: " + roomNo);
 
-                            Log.d(TAG, "handleMessage: item updated");
+                            // 서버에서 받은 방 번호와 채팅리스트의 방 번호와 번호를 비교해서 같으면 기존 방이 있는 것
+                            if(mChatArrayList.get(i).getRoomNo() == roomNoToInt){
 
-                            //내 채팅내용
-                            MessageListContent messageListContent = new MessageListContent(roomNoToInt, myProfile, myEmail, message, time, mChatArrayList.get(i).getCount()+1);
+                                Log.d(TAG, "handleMessage: item updated");
+
+                                //내 채팅내용
+                                MessageListContent messageListContent = new MessageListContent(roomNoToInt, myProfile, myEmail, message, time, mChatArrayList.get(i).getCount()+1);
+                                // 새로운 메세지가 오면 아이템의 포지션을 맨 위로 올려준다.
+
+                                mChatArrayList.remove(i);
+                                mChatArrayList.add(0, messageListContent);
+                                mAdapter.notifyDataSetChanged();
+                                //mAdapter.notifyItemMoved(i, 0);
+                                cnt = 1;
+                                break;
+                            }
+                        }
+
+                        Log.d(TAG, "handleMessage: cnt: " + cnt);
+
+                        // 기존 방이 없으면
+                        if(cnt == 0) {
+                            Log.d(TAG, "handleMessage: cnt == 0");
+                            MessageListContent messageListContent = new MessageListContent(roomNoToInt, myProfile, myEmail, message, time, 1);
                             // 새로운 메세지가 오면 아이템의 포지션을 맨 위로 올려준다.
-
-                            mChatArrayList.remove(i);
                             mChatArrayList.add(0, messageListContent);
                             mAdapter.notifyDataSetChanged();
-                            //mAdapter.notifyItemMoved(i, 0);
-                            cnt = 1;
-                            break;
                         }
                     }
 
-                    Log.d(TAG, "handleMessage: cnt: " + cnt);
 
-                    // 기존 방이 없으면
-                    if(cnt == 0) {
-                        Log.d(TAG, "handleMessage: cnt == 0");
-                        MessageListContent messageListContent = new MessageListContent(roomNoToInt, myProfile, myEmail, message, time, 1);
-                        // 새로운 메세지가 오면 아이템의 포지션을 맨 위로 올려준다.
-                        mChatArrayList.add(0, messageListContent);
-                        mAdapter.notifyDataSetChanged();
-                    }
+
+
+
+
 
 
 
@@ -481,10 +490,6 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
         // 2-2 onStart()에서 bind 하기
         // mConnection객체를 가지고, bindService()메소드를 통해서 Service에 bind한다.
         // 서비스 시작하기
-
-
-
-
     }
 
     @Override
@@ -522,15 +527,13 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
         super.onStop();
         Log.d(TAG, "onStop() called");
 
-
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         Log.d(TAG, "onDestroy() called");
-        finish();
+
     }
 
 

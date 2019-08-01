@@ -137,7 +137,7 @@ public class UserPageActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(UserPageActivity.this, ChatRoomActivity.class);
                 intent.putExtra("roomNo", roomNo);
-                intent.putExtra("yourEmail", yourEmail);
+                intent.putExtra("yourEmail", yourEmail); // 수신자
                 intent.putExtra("videoCall", 1);
                 intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);

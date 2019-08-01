@@ -959,7 +959,6 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
 
         String roomNoToString = Integer.toString(roomNo);
         // 자바 서버로 메세지 보내주기 위한 쓰레드 생성
-
         response = new ResponseThread(socket, 3, yourEmail, roomNoToString); // ChatService에서 생성한 클라이언트 소켓 변수
         response.start();
 
@@ -1008,15 +1007,14 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy() called");
-        finish();
     }
 
-    // 뒤로가기 버튼 클릭 시 액티비티 재실행
-//    @Override
-//    public void onBackPressed() {
-//        Log.d(TAG, "onBackPressed() called");
-//
-//        // Unbind from service
+     //뒤로가기 버튼 클릭 시 액티비티 재실행
+    @Override
+    public void onBackPressed() {
+        Log.d(TAG, "onBackPressed() called");
+
+        // Unbind from service
 //        if (isService) {
 //            Log.d(TAG, "onBackPressed(): unbind");
 //            currentRoomNo = -1;
@@ -1024,17 +1022,17 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
 //            unbindService(conn);
 //            //isService = false;
 //        }
-//
-//        if(backbuttonflag == 1){
-//            Log.d(TAG, "onBackPressed: 1");
-//
-//            this.finish();
-//            startActivity(new Intent(this, ChatActivity.class));
-//        }else{
-//            this.finish();
-//        }
-//
-//    }
+
+        if(backbuttonflag == 1){
+            Log.d(TAG, "onBackPressed: 1");
+
+            this.finish();
+            startActivity(new Intent(this, ChatActivity.class));
+        }else{
+            this.finish();
+        }
+
+    }
 
     public void webrtcstart(){
         Log.d(TAG, "webrtcstart: ");
@@ -1495,8 +1493,11 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
                 }
             }
 
+            // 방 번호와 발신자 이메일을 함께 보내준다.
             Log.d(TAG, "connectToRoom: currentRoomNo: " + roomNo);
             intent.putExtra("roomNo", roomNo);
+            intent.putExtra("senderEmail", loggedUseremail);
+            intent.putExtra("yourEmail", yourEmail);
 
             startActivityForResult(intent, CONNECTION_REQUEST);
         }
