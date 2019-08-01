@@ -87,7 +87,7 @@ public class MessageContentAdapter extends RecyclerView.Adapter<RecyclerView.Vie
             Log.d(TAG, "onBindViewHolder: getMode(): " + itemList.get(position).getMode());
 
             // 텍스트 메세지일 경우
-            if((itemList.get(position).getMode() == 1) || (itemList.get(position).getMode() == 4)){
+            if((itemList.get(position).getMode() == 1) || (itemList.get(position).getMode() == 4) || (itemList.get(position).getMode() == 5)){
 
                 ((MyViewHolder)holder).ivMyChatImage.setVisibility(View.GONE);
                 ((MyViewHolder)holder).tvMessage.setVisibility(View.VISIBLE);
@@ -141,7 +141,7 @@ public class MessageContentAdapter extends RecyclerView.Adapter<RecyclerView.Vie
                     .into(((OtherViewHolder)holder).civProfile);
 
             // 텍스트 메세지일 경우
-            if(itemList.get(position).getMode() == 1 || (itemList.get(position).getMode() == 4)){
+            if(itemList.get(position).getMode() == 1 || (itemList.get(position).getMode() == 4) || (itemList.get(position).getMode() == 5)){
 
                 ((OtherViewHolder)holder).ivOtherChatImage.setVisibility(View.GONE);
                 ((OtherViewHolder)holder).tvMessage.setVisibility(View.VISIBLE);

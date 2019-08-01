@@ -2,13 +2,17 @@ package com.example.retrofitexample.VideoCall;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -23,10 +27,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.retrofitexample.Chat.ChatRoomActivity;
+import com.example.retrofitexample.Chat.ChatService;
 import com.example.retrofitexample.Chat.Model.Room;
 import com.example.retrofitexample.R;
 import com.example.retrofitexample.Retrofit.Api;
 import com.example.retrofitexample.Retrofit.ApiClient;
+import static com.example.retrofitexample.BootReceiver.isService;
 
 import org.json.JSONObject;
 import org.w3c.dom.Text;
@@ -49,7 +55,7 @@ import static com.example.retrofitexample.Chat.ChatService.currentRoomNo;
 import static com.example.retrofitexample.Chat.ChatService.dos;
 import static com.example.retrofitexample.Chat.ChatService.socket;
 
-public class ReceiveCallActivity extends AppCompatActivity {
+public class ReceiveCallActivity extends AppCompatActivity implements ChatService.ServiceCallbacks{
     public static final String TAG = "ReceiveCallActivity : ";
 
     ImageView ivSenderProfile;
@@ -79,6 +85,10 @@ public class ReceiveCallActivity extends AppCompatActivity {
 
     SendThread send;
 
+    int roomNo; // 방 번호 저장
+
+    private ChatService myService; // 서비스
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,9 +98,9 @@ public class ReceiveCallActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String senderEmail = intent.getStringExtra("senderEmail");
         String senderProfile = intent.getStringExtra("senderProfile");
-        int roomNo = intent.getIntExtra("roomNo", -1);
+        roomNo = intent.getIntExtra("roomNo", -1);
         uniqueID = intent.getStringExtra("callID");
-        currentRoomNo = roomNo;
+        currentRoomNo = -3; // 수신메시지용 방번호
 
         Log.d(TAG, "onCreate: senderEmail: " + senderEmail);
         Log.d(TAG, "onCreate: senderProfile: " + senderProfile);
@@ -126,35 +136,18 @@ public class ReceiveCallActivity extends AppCompatActivity {
                 final String date = mFormat.format(mDate);
                 SimpleDateFormat mFormat2 = new SimpleDateFormat("aa hh:mm", Locale.KOREAN);
                 final String time = mFormat2.format(mDate);
+                Log.d(TAG, "onClick: roomNo: " + roomNo);
 
-                // 통화 거절 메세지
-                sendMessageToMySQL(5, roomNo, loggedUseremail, senderEmail, "영상통화 종료", date, time);
+                send = new SendThread(socket, 5, roomNo, loggedUseremail, senderEmail, "영상통화 취소", date, time); // ChatService에서 생성한 클라이언트 소켓 변수
+                send.start();
             }
         });
 
     }
 
-    public void sendMessageToMySQL(final int mode, final int roomNo, final String myEmail, final String yourEmail, final String message, final String date, final String time){
-        Log.d(TAG, "sendMessageToMySQL: mode: " + mode);
+    @Override
+    public void ChatdoSomething() {
 
-        Api api = ApiClient.getClient().create(Api.class);
-
-        Call<Room> call = api.sendMessage(mode, roomNo, myEmail, yourEmail, message, date, time);
-        call.enqueue(new Callback<Room>() {
-
-            @Override
-            public void onResponse(Call<Room> call, final Response<Room> response) {
-                Log.d("TAG", "onResponse: " + response.body().getResult());
-
-                send = new SendThread(socket, mode, roomNo, myEmail, yourEmail, message, date, time); // ChatService에서 생성한 클라이언트 소켓 변수
-                send.start();
-            }
-
-            @Override
-            public void onFailure(Call<Room> call, Throwable t) {
-                Log.d("ToMySQL Error",t.getMessage());
-            }
-        });
     }
 
     // 내부 클래스  ( 메세지 전송용 )
@@ -205,6 +198,8 @@ public class ReceiveCallActivity extends AppCompatActivity {
                     jo.put("date", date);
                     jo.put("time", time);
                     dos.writeUTF(jo.toString());
+
+                    finish();
 
                 }
 
@@ -697,6 +692,51 @@ public class ReceiveCallActivity extends AppCompatActivity {
                 .create()
                 .show();
         return false;
+    }
+
+    // Service에서 bind한 것에 대한 결과로, 연결이 되거나, 끊어지기도 하는데 그 상태에 대한 Callback들이다.
+    private ServiceConnection conn = new ServiceConnection() {
+        public void onServiceConnected(ComponentName name,
+                                       IBinder service) {
+
+            // 서비스와 연결되었을 때 호출되는 메서드
+            // cast the IBinder and get MyService instance
+            ChatService.LocalBinder binder = (ChatService.LocalBinder) service;
+            // getService 메소드를 사용해서 service객체를 사용한다.
+            myService = binder.getService();
+            myService.setCallbacks(ReceiveCallActivity.this); // register
+
+            isService = true; // 실행 여부를 판단
+        }
+        public void onServiceDisconnected(ComponentName name) {
+            // 서비스와 연결이 끊기거나 종료되었을 때
+            isService = false;
+        }
+    };
+
+    @Override
+    protected  void onResume(){
+        super.onResume();
+
+        // bind to Service
+        Intent intent = new Intent(this, ChatService.class);
+        bindService(intent, conn, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected  void onPause(){
+        super.onPause();
+
+        // Unbind from service
+        if (isService) {
+            currentRoomNo = -1;
+            Log.d(TAG, "onPause: isService:" + isService);
+
+            Log.d(TAG, "onPause: unbind");
+            myService.setCallbacks(null); // unregister
+            unbindService(conn);
+            //isService = false;
+        }
     }
 
     @Override

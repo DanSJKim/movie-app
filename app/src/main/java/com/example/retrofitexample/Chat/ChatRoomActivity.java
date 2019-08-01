@@ -71,6 +71,7 @@ import com.example.retrofitexample.Retrofit.ApiClient;
 import com.example.retrofitexample.VideoCall.CallActivity;
 import com.example.retrofitexample.VideoCall.ConnectActivity;
 import com.example.retrofitexample.VideoCall.SettingsActivity;
+import static com.example.retrofitexample.BootReceiver.isService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -91,9 +92,6 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
 
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -126,7 +124,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
     DatabaseHelper db;
 
     private ChatService myService; // 서비스
-    private boolean isService = false; // 서비스 실행 확인
+    //private boolean isService = false; // 서비스 실행 확인
 
     Toolbar myToolbar; // 상단 툴바
 
@@ -495,7 +493,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
 
                         int roomNoToInt = Integer.parseInt(roomNo);
 
-                        //내 채팅내용
+                        //내 채팅내용 count = 메세지 읽음 표시
                         MessageContent messageContent = new MessageContent(modeToInt, myProfile, myEmail, message, date, time, 1);
                         mArrayList.add(messageContent);
                         mAdapter.notifyDataSetChanged();
@@ -974,6 +972,7 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         Log.d(TAG, "onResume: currentRoomNo: " + currentRoomNo);
         CheckRoomNoIsExistOrNot(roomNo);
 
+        Log.d(TAG, "onResume: isService: " + isService);
         // bind to Service
         Intent intent = new Intent(this, ChatService.class);
         bindService(intent, conn, Context.BIND_AUTO_CREATE);
@@ -987,6 +986,14 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
 
         currentRoomNo = -1; // 화면이 보이지 않을 떄는 방 번호를 -1로 지정해 준다
 
+        // Unbind from service
+        if (isService) {
+            Log.d(TAG, "onPause(): unbind");
+            currentRoomNo = -1;
+            myService.setCallbacks(null); // unregister
+            unbindService(conn);
+            //isService = false;
+        }
     }
 
     @Override
@@ -1005,29 +1012,29 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
     }
 
     // 뒤로가기 버튼 클릭 시 액티비티 재실행
-    @Override
-    public void onBackPressed() {
-        Log.d(TAG, "onBackPressed() called");
-
-        // Unbind from service
-        if (isService) {
-            Log.d(TAG, "onBackPressed(): unbind");
-            currentRoomNo = -1;
-            myService.setCallbacks(null); // unregister
-            unbindService(conn);
-            //isService = false;
-        }
-
-        if(backbuttonflag == 1){
-            Log.d(TAG, "onBackPressed: 1");
-
-            this.finish();
-            startActivity(new Intent(this, ChatActivity.class));
-        }else{
-            this.finish();
-        }
-
-    }
+//    @Override
+//    public void onBackPressed() {
+//        Log.d(TAG, "onBackPressed() called");
+//
+//        // Unbind from service
+//        if (isService) {
+//            Log.d(TAG, "onBackPressed(): unbind");
+//            currentRoomNo = -1;
+//            myService.setCallbacks(null); // unregister
+//            unbindService(conn);
+//            //isService = false;
+//        }
+//
+//        if(backbuttonflag == 1){
+//            Log.d(TAG, "onBackPressed: 1");
+//
+//            this.finish();
+//            startActivity(new Intent(this, ChatActivity.class));
+//        }else{
+//            this.finish();
+//        }
+//
+//    }
 
     public void webrtcstart(){
         Log.d(TAG, "webrtcstart: ");

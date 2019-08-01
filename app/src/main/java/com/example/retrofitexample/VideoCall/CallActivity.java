@@ -14,9 +14,11 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
@@ -24,6 +26,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -33,6 +36,7 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Toast;
 
+import com.example.retrofitexample.Chat.ChatActivity;
 import com.example.retrofitexample.Chat.ChatService;
 import com.example.retrofitexample.R;
 
@@ -68,6 +72,7 @@ import org.webrtc.VideoFileRenderer;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
 
+import static com.example.retrofitexample.BootReceiver.isService;
 import static com.example.retrofitexample.Chat.ChatService.currentRoomNo;
 
 /**
@@ -133,6 +138,8 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
 
   private static final int CAPTURE_PERMISSION_REQUEST_CODE = 1;
 
+  private ChatService myService; // 서비스
+
   // List of mandatory application permissions.
   private static final String[] MANDATORY_PERMISSIONS = {"android.permission.MODIFY_AUDIO_SETTINGS",
       "android.permission.RECORD_AUDIO", "android.permission.INTERNET"};
@@ -195,6 +202,7 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   private HudFragment hudFragment;
   private CpuMonitor cpuMonitor;
 
+  int roomNo;
   @Override
   // TODO(bugs.webrtc.org/8580): LayoutParams.FLAG_TURN_SCREEN_ON and
   // LayoutParams.FLAG_SHOW_WHEN_LOCKED are deprecated.
@@ -207,8 +215,8 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
 
     // 영상 통화 액티비티를 입장해 있는 방의 번호와 일치시킨다.
     Intent getroomnointent = getIntent();
-    int roomNo = getroomnointent.getIntExtra("roomNo", -1);
-    currentRoomNo = roomNo;
+    roomNo = getroomnointent.getIntExtra("roomNo", -1);
+    currentRoomNo = -2; // 통화용 방번호
     Log.d(TAG, "onCreate: received room number: " + currentRoomNo);
 
     // Set window styles for fullscreen-window size. Needs to be done before
@@ -518,6 +526,32 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     }
     if (cpuMonitor != null) {
       cpuMonitor.resume();
+    }
+  }
+
+  @Override
+  public void onResume(){
+    super.onResume();
+    Log.d(TAG, "onResume: ");
+
+    // bind to Service
+    Intent intent = new Intent(this, ChatService.class);
+    bindService(intent, conn, Context.BIND_AUTO_CREATE);
+  }
+
+  @Override
+  public void onPause(){
+    super.onPause();
+
+    // Unbind from service
+    if (isService) {
+      currentRoomNo = -1;
+      Log.d(TAG, "onPause: isService:" + isService);
+
+      Log.d(TAG, "onPause: unbind");
+      myService.setCallbacks(null); // unregister
+      unbindService(conn);
+      //isService = false;
     }
   }
 
@@ -985,10 +1019,30 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     reportError(description);
   }
 
+  private ServiceConnection conn = new ServiceConnection() {
+    public void onServiceConnected(ComponentName name,
+                                   IBinder service) {
+
+      // 서비스와 연결되었을 때 호출되는 메서드
+      // cast the IBinder and get MyService instance
+      ChatService.LocalBinder binder = (ChatService.LocalBinder) service;
+      // getService 메소드를 사용해서 service객체를 사용한다.
+      myService = (ChatService) binder.getService();
+      myService.setCallbacks(CallActivity.this); // register
+
+      isService = true; // 실행 여부를 판단
+    }
+    public void onServiceDisconnected(ComponentName name) {
+      // 서비스와 연결이 끊기거나 종료되었을 때
+      isService = false;
+    }
+  };
+
   public void ChatdoSomething(){
     Log.d(TAG, "ChatdoSomething: callback disconnect");
 
-    disconnect();
+    //disconnect();
+    finish();
   }
 
 }

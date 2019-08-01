@@ -22,8 +22,11 @@ import android.widget.Toast;
 import com.example.retrofitexample.BoxOffice.ProfileActivity;
 import com.example.retrofitexample.Chat.Model.DatabaseHelper;
 import com.example.retrofitexample.Chat.Model.MessageListContent;
+import com.example.retrofitexample.Chat.Model.Room;
 import com.example.retrofitexample.LoginRegister.SharedPref;
 import com.example.retrofitexample.R;
+import com.example.retrofitexample.Retrofit.Api;
+import com.example.retrofitexample.Retrofit.ApiClient;
 import com.example.retrofitexample.VideoCall.CallActivity;
 import com.example.retrofitexample.VideoCall.ReceiveCallActivity;
 import com.facebook.stetho.inspector.protocol.module.Database;
@@ -35,6 +38,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.Random;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import static com.example.retrofitexample.BoxOffice.ProfileActivity.loggedUseremail;
 
@@ -64,8 +71,8 @@ public class ChatService extends Service {
 
     static int i = 0; // 노티 번호
 
-    class LocalBinder extends Binder {
-        ChatService getService() { // 서비스 객체를 리턴
+    public class LocalBinder extends Binder {
+        public ChatService getService() { // 서비스 객체를 리턴
             return ChatService.this;
         }
     }
@@ -167,7 +174,6 @@ public class ChatService extends Service {
 
                 String profileImage = SharedPref.getInstance(getApplicationContext()).StoredProfileImage(); // 내 프로필 이미지
 
-
                 // 서버에 초기 데이터 전송
                 Log.d(TAG, "run: loggedUseremail: " + userEmail);
                 out.writeUTF(userEmail);
@@ -243,7 +249,6 @@ public class ChatService extends Service {
                                 if(modeToInt == 4){
                                     Log.d(TAG, "run: mode is: " + modeToInt);
 
-                                    Log.d(TAG, "run: mode is: " + modeToInt);
                                     String callID = jsonObject.getString("callID");
 
                                     String senderEmail = jsonObject.getString("myEmail");
@@ -260,8 +265,21 @@ public class ChatService extends Service {
                                 }
                             }
 
+                            // 영상통화 화면일 때
+                            if(currentRoomNo == -2){
+                                Log.d(TAG, "run: is callactivity");
+                                String senderEmail = jsonObject.getString("myEmail");
+                                String date = jsonObject.getString("date");
+                                String time = jsonObject.getString("time");
+
+                                sendMessageToMySQL(5, roomNoToInt, loggedUseremail, senderEmail, "영상통화 취소", date, time);
+
+                                serviceCallbacks.ChatdoSomething();
+
+                            }
+
                             // 채팅방이나 채팅목록 화면이 아닐 때 알림을 실행
-                            if((roomNoToInt != currentRoomNo) && (currentRoomNo != 0)){
+                            if((roomNoToInt != currentRoomNo) && (currentRoomNo != 0) && (currentRoomNo != -2)){
                                 Log.d(TAG, "run: no chatlist, chatroom");
 
                                 String myEmail = jsonObject.getString("myEmail"); // 메세지 작성자의 이메일
@@ -344,8 +362,6 @@ public class ChatService extends Service {
                         }
 
                             //Log.e("My App", "Could not parse malformed JSON: \"" + receivedMsg + "\"");
-
-
                     }
 
                 }
@@ -388,6 +404,28 @@ public class ChatService extends Service {
             }
         }
     } //RunningThread
+
+
+    public void sendMessageToMySQL(final int mode, final int roomNo, final String myEmail, final String yourEmail, final String message, final String date, final String time){
+        Log.d(TAG, "sendMessageToMySQL: mode: " + mode);
+
+        Api api = ApiClient.getClient().create(Api.class);
+
+        Call<Room> call = api.sendMessage(mode, roomNo, myEmail, yourEmail, message, date, time);
+        call.enqueue(new Callback<Room>() {
+
+            @Override
+            public void onResponse(Call<Room> call, final Response<Room> response) {
+                Log.d("TAG", "onResponse: " + response.body().getResult());
+
+            }
+
+            @Override
+            public void onFailure(Call<Room> call, Throwable t) {
+                Log.d("ToMySQL Error",t.getMessage());
+            }
+        });
+    }
 
 
 }

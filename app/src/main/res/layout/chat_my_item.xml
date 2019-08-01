@@ -45,7 +45,7 @@ android:layout_height="wrap_content">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ts13123dfgdsgsdgsdgsdgdsdsfgdsfgsdfgsdgsdfg313aa"
+            android:text="no text"
             android:id="@+id/tvMyChatMessage"
             android:textColor="#000000"
             android:background="#FFFFFF"
