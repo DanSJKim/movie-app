@@ -153,6 +153,17 @@
                 android:paddingBottom="10dp"/>
 
 
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:src="@drawable/ic_videocam_black_24dp"
+                android:id="@+id/ivVideo"
+                android:paddingTop="10dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:paddingBottom="10dp"/>
+
 
         </LinearLayout>
 

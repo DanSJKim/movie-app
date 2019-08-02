@@ -32,6 +32,7 @@ import com.example.retrofitexample.MyPage.MyPage_Img;
 import com.example.retrofitexample.R;
 import com.example.retrofitexample.Retrofit.Api;
 import com.example.retrofitexample.Retrofit.ApiClient;
+import com.example.retrofitexample.Streaming.StreamingActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -57,6 +58,7 @@ public class ProfileActivity extends AppCompatActivity {
     ImageView ivSearch;//검색 탭
     ImageView ivMap;//지도 탭
     ImageView ivChat;//채팅 탭
+    ImageView ivVideo;//스트리밍 탭
 
     TextView boxOfficeDate;//상단 박스오피스 날짜
 
@@ -118,6 +120,7 @@ public class ProfileActivity extends AppCompatActivity {
         ivSearch = (ImageView) findViewById(R.id.ivSearch);//검색 탭
         ivMap = (ImageView) findViewById(R.id.ivMap);//지도 탭
         ivChat = (ImageView) findViewById(R.id.ivChat);//채팅 탭
+        ivVideo = (ImageView) findViewById(R.id.ivVideo);
         boxOfficeDate = (TextView) findViewById(R.id.tvBoxOfficeDate);//상단 박스오피스 날짜
 
         CalenderButton = (ImageView) findViewById(R.id.ivBoxOfficeCalender);
@@ -169,6 +172,17 @@ public class ProfileActivity extends AppCompatActivity {
             public void onClick(View v) {
                 finish();
                 Intent intent = new Intent(ProfileActivity.this, ChatActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                overridePendingTransition(0,0);
+            }
+        });
+
+        ivVideo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+                Intent intent = new Intent(ProfileActivity.this, StreamingActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 overridePendingTransition(0,0);

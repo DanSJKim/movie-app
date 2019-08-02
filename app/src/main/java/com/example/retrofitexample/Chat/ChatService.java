@@ -165,7 +165,7 @@ public class ChatService extends Service {
             try {
                 Log.d(TAG, "SocketClient run: ");
                 // 채팅 서버에 접속 ( 연결 )  ( 서버쪽 ip와 포트 )
-                socket = new Socket("192.168.0.78",6075);
+                socket = new Socket("192.168.0.77",6075);
 
                 // 메세지를 서버에 전달 할 수 있는 통로 ( 만들기 )
                 out = new DataOutputStream(socket.getOutputStream());
@@ -252,7 +252,7 @@ public class ChatService extends Service {
 
                             }
 
-                            // 영상채팅 메세지를 수신한 사람이 영상통화 화면일 때
+                            // 영상채팅 메세지를 수신한 사람이 영상통화 화면일 때 종료메세지를 전송
                             if(currentRoomNo == -2 && modeToInt == 5){
                                 Log.d(TAG, "run: is callactivity");
                                 String senderEmail = jsonObject.getString("myEmail");

@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.example.retrofitexample"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -35,6 +35,14 @@ android {
     }
 }
 
+// This enables Gradle to locate Android library dependencies in the same manner as jar-based dependencies. Add to the bottom of the file.
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:28.0.0'
@@ -59,4 +67,7 @@ dependencies {
     implementation 'com.facebook.stetho:stetho:1.5.0'
     implementation 'org.webrtc:google-webrtc:1.0.+' // webrtc
     implementation files('libs/autobanh.jar')
+
+    // The GoCoder SDK library dependency declaration
+    implementation 'com.wowza.gocoder.sdk.android:com.wowza.gocoder.sdk:2.0.0@aar'
 }

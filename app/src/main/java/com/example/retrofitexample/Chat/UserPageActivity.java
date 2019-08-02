@@ -71,6 +71,7 @@ public class UserPageActivity extends AppCompatActivity {
 
         if(loggedUseremail.equals(yourEmail)){
             ivChat.setVisibility(View.GONE);
+            ivVideoCall.setVisibility(View.GONE);
         }
 
         // 상대와 채팅 버튼
