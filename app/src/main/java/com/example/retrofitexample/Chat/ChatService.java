@@ -165,7 +165,7 @@ public class ChatService extends Service {
             try {
                 Log.d(TAG, "SocketClient run: ");
                 // 채팅 서버에 접속 ( 연결 )  ( 서버쪽 ip와 포트 )
-                socket = new Socket("192.168.0.70",6075);
+                socket = new Socket("192.168.0.78",6075);
 
                 // 메세지를 서버에 전달 할 수 있는 통로 ( 만들기 )
                 out = new DataOutputStream(socket.getOutputStream());
@@ -244,7 +244,12 @@ public class ChatService extends Service {
                             // 보낸 쪽의 방 번호와 사용자가 보고 있는 액티비티가 일치하거나 대기실일때 실행한다.
                             if((roomNoToInt == currentRoomNo) || (currentRoomNo == 0)){
                                 Log.d(TAG, "run: is chatlist or chatroom " + serviceCallbacks);
-                                serviceCallbacks.ChatdoSomething();
+
+                                // 영상통화할 때 serviceCallbacks가 null이어서 콜백이 호출되지 않는다.
+                                if(serviceCallbacks!=null){
+                                    serviceCallbacks.ChatdoSomething();
+                                }
+
                             }
 
                             // 영상채팅 메세지를 수신한 사람이 영상통화 화면일 때

@@ -165,16 +165,16 @@ public class ReceiveCallActivity extends AppCompatActivity implements ChatServic
         Log.d(TAG, "ChatdoSomething: finish activity");
 
         // Unbind from service
-        if (isService) {
-            currentRoomNo = -1;
-            Log.d(TAG, "onStop: isService:" + isService);
-
-            Log.d(TAG, "onStop: unbind");
-            myService.setCallbacks(null); // unregister
-            unbindService(conn);
-            //isService = false;
-
-        }
+//        if (isService) {
+//            currentRoomNo = -1;
+//            Log.d(TAG, "onStop: isService:" + isService);
+//
+//            Log.d(TAG, "onStop: unbind");
+//            myService.setCallbacks(null); // unregister
+//            unbindService(conn);
+//            //isService = false;
+//
+//        }
         // close this activity
         finish();
     }
@@ -770,6 +770,16 @@ public class ReceiveCallActivity extends AppCompatActivity implements ChatServic
         super.onPause();
         Log.d(TAG, "onPause: ");
 
+        // Unbind from service
+        if (isService) {
+            currentRoomNo = -1;
+            Log.d(TAG, "onPause: isService:" + isService);
+
+            Log.d(TAG, "onPause: unbind");
+            myService.setCallbacks(null); // unregister
+            unbindService(conn);
+            //isService = false;
+        }
 
     }
 

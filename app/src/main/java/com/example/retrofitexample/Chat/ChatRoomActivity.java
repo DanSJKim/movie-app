@@ -948,6 +948,8 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         // 2-2 onStart()에서 bind 하기
         // mConnection객체를 가지고, bindService()메소드를 통해서 Service에 bind한다.
         // 서비스 시작하기
+        // 읽음 표시 지워주기 위한 메세지.
+
 
 
     }
@@ -957,10 +959,6 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         super.onResume();
         Log.d(TAG, "onResume() called");
 
-        String roomNoToString = Integer.toString(roomNo);
-        // 자바 서버로 메세지 보내주기 위한 쓰레드 생성
-        response = new ResponseThread(socket, 3, yourEmail, roomNoToString); // ChatService에서 생성한 클라이언트 소켓 변수
-        response.start();
 
         // 상대방 메세지 읽음 카운트 DB 0으로 변경
         //checkMessageCount();
@@ -975,6 +973,11 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         // bind to Service
         Intent intent = new Intent(this, ChatService.class);
         bindService(intent, conn, Context.BIND_AUTO_CREATE);
+
+        String roomNoToString = Integer.toString(roomNo);
+
+        response = new ResponseThread(socket, 3, yourEmail, roomNoToString); // ChatService에서 생성한 클라이언트 소켓 변수
+        response.start();
 
     }
 

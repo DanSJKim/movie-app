@@ -266,7 +266,7 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
                     int modeToInt = Integer.parseInt(mode);
                     String roomNo = jsonObject.getString("roomNo");
 
-                    if(modeToInt != 3){
+                    if(modeToInt != 3) {
                         String myEmail = jsonObject.getString("myEmail");
                         String myProfile = jsonObject.getString("myProfile");
                         String yourEmail = jsonObject.getString("yourEmail");
@@ -280,18 +280,18 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
 
                         // 채팅 목록에 기존 방이 있는지 여부
                         int cnt = 0;
-                        for(int i = 0 ; i < mChatArrayList.size() ; i++){
+                        for (int i = 0; i < mChatArrayList.size(); i++) {
 
                             Log.d(TAG, "handleMessage: getroomNo: " + mChatArrayList.get(i).getRoomNo());
                             Log.d(TAG, "handleMessage: roomNo: " + roomNo);
 
                             // 서버에서 받은 방 번호와 채팅리스트의 방 번호와 번호를 비교해서 같으면 기존 방이 있는 것
-                            if(mChatArrayList.get(i).getRoomNo() == roomNoToInt){
+                            if (mChatArrayList.get(i).getRoomNo() == roomNoToInt) {
 
                                 Log.d(TAG, "handleMessage: item updated");
 
                                 //내 채팅내용
-                                MessageListContent messageListContent = new MessageListContent(roomNoToInt, myProfile, myEmail, message, time, mChatArrayList.get(i).getCount()+1);
+                                MessageListContent messageListContent = new MessageListContent(roomNoToInt, myProfile, myEmail, message, time, mChatArrayList.get(i).getCount() + 1);
                                 // 새로운 메세지가 오면 아이템의 포지션을 맨 위로 올려준다.
 
                                 mChatArrayList.remove(i);
@@ -306,7 +306,7 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
                         Log.d(TAG, "handleMessage: cnt: " + cnt);
 
                         // 기존 방이 없으면
-                        if(cnt == 0) {
+                        if (cnt == 0) {
                             Log.d(TAG, "handleMessage: cnt == 0");
                             MessageListContent messageListContent = new MessageListContent(roomNoToInt, myProfile, myEmail, message, time, 1);
                             // 새로운 메세지가 오면 아이템의 포지션을 맨 위로 올려준다.
@@ -314,15 +314,6 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
                             mAdapter.notifyDataSetChanged();
                         }
                     }
-
-
-
-
-
-
-
-
-
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -496,6 +487,7 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume() called");
+        Log.d(TAG, "onResume: isService: " + isService);
 
         currentRoomNo = 0;
 
@@ -509,6 +501,7 @@ public class ChatActivity extends AppCompatActivity implements ChatService.Servi
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause() called");
+        Log.d(TAG, "onPause: isService: " + isService);
 
         // Unbind from service
         if (isService) {
