@@ -36,7 +36,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar"
         android:usesCleartextTraffic="true">
-        <activity android:name=".Streaming.StreamingListActivity"></activity>
+        <activity android:name=".Streaming.PlayerActivity"></activity>
+        <activity android:name=".Streaming.StreamingListActivity" />
         <activity
             android:name=".Streaming.StreamingActivity"
             android:configChanges="orientation|keyboardHidden|screenSize" />

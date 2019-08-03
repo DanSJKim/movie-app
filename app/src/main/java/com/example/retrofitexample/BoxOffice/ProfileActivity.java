@@ -33,6 +33,7 @@ import com.example.retrofitexample.R;
 import com.example.retrofitexample.Retrofit.Api;
 import com.example.retrofitexample.Retrofit.ApiClient;
 import com.example.retrofitexample.Streaming.StreamingActivity;
+import com.example.retrofitexample.Streaming.StreamingListActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -182,7 +183,7 @@ public class ProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 finish();
-                Intent intent = new Intent(ProfileActivity.this, StreamingActivity.class);
+                Intent intent = new Intent(ProfileActivity.this, StreamingListActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 overridePendingTransition(0,0);
