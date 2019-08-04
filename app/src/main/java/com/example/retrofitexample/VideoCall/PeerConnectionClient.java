@@ -402,16 +402,16 @@ public class PeerConnectionClient {
     // interface is set when this flag is enabled. As a result, a copy of recorded
     // audio samples are provided to this client directly from the native audio
     // layer in Java.
-    if (peerConnectionParameters.saveInputAudioToFile) {
-      if (!peerConnectionParameters.useOpenSLES) {
-        Log.d(TAG, "Enable recording of microphone input audio to file");
-        //saveRecordedAudioToFile = new RecordedAudioToFileController(executor);
-      } else {
-        // TODO(henrika): ensure that the UI reflects that if OpenSL ES is selected,
-        // then the "Save inut audio to file" option shall be grayed out.
-        Log.e(TAG, "Recording of input audio is not supported for OpenSL ES");
-      }
-    }
+//    if (peerConnectionParameters.saveInputAudioToFile) {
+//      if (!peerConnectionParameters.useOpenSLES) {
+//        Log.d(TAG, "Enable recording of microphone input audio to file");
+//        saveRecordedAudioToFile = new RecordedAudioToFileController(executor);
+//      } else {
+//        // TODO(henrika): ensure that the UI reflects that if OpenSL ES is selected,
+//        // then the "Save inut audio to file" option shall be grayed out.
+//        Log.e(TAG, "Recording of input audio is not supported for OpenSL ES");
+//      }
+//    }
 
     final AudioDeviceModule adm = createJavaAudioDevice();
 
@@ -494,7 +494,6 @@ public class PeerConnectionClient {
     };
 
     return JavaAudioDeviceModule.builder(appContext)
-        //.setSamplesReadyCallback(saveRecordedAudioToFile)
         .setUseHardwareAcousticEchoCanceler(!peerConnectionParameters.disableBuiltInAEC)
         .setUseHardwareNoiseSuppressor(!peerConnectionParameters.disableBuiltInNS)
         .setAudioRecordErrorCallback(audioRecordErrorCallback)
@@ -613,12 +612,6 @@ public class PeerConnectionClient {
         Log.e(TAG, "Can not open aecdump file", e);
       }
     }
-
-//    if (saveRecordedAudioToFile != null) {
-//      if (saveRecordedAudioToFile.start()) {
-//        Log.d(TAG, "Recording input audio to file is activated");
-//      }
-//    }
     Log.d(TAG, "Peer connection created.");
   }
 
@@ -638,8 +631,6 @@ public class PeerConnectionClient {
       Log.d(TAG, "RtcEventLog is disabled.");
       return;
     }
-//    rtcEventLog = new RtcEventLog(peerConnection);
-//    rtcEventLog.start(createRtcEventLogOutputFile());
   }
 
   private void closeInternal() {
@@ -652,11 +643,6 @@ public class PeerConnectionClient {
       dataChannel.dispose();
       dataChannel = null;
     }
-//    if (rtcEventLog != null) {
-//      // RtcEventLog should stop before the peer connection is disposed.
-//      rtcEventLog.stop();
-//      rtcEventLog = null;
-//    }
     if (peerConnection != null) {
       peerConnection.dispose();
       peerConnection = null;
@@ -686,11 +672,6 @@ public class PeerConnectionClient {
       surfaceTextureHelper.dispose();
       surfaceTextureHelper = null;
     }
-//    if (saveRecordedAudioToFile != null) {
-//      Log.d(TAG, "Closing audio file for recorded input audio.");
-//      saveRecordedAudioToFile.stop();
-//      saveRecordedAudioToFile = null;
-//    }
     localRender = null;
     remoteSinks = null;
     Log.d(TAG, "Closing peer connection factory.");

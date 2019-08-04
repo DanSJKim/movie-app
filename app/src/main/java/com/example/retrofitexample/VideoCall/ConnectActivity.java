@@ -523,9 +523,6 @@ public class ConnectActivity extends Activity {
       }
     }
 
-    // Check statistics display option.
-    boolean displayHud = sharedPrefGetBoolean(R.string.pref_displayhud_key,
-        CallActivity.EXTRA_DISPLAY_HUD, R.string.pref_displayhud_default, useValuesFromIntent);
 
     boolean tracing = sharedPrefGetBoolean(R.string.pref_tracing_key, CallActivity.EXTRA_TRACING,
         R.string.pref_tracing_default, useValuesFromIntent);
@@ -584,7 +581,6 @@ public class ConnectActivity extends Activity {
       intent.putExtra(CallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, disableWebRtcAGCAndHPF);
       intent.putExtra(CallActivity.EXTRA_AUDIO_BITRATE, audioStartBitrate);
       intent.putExtra(CallActivity.EXTRA_AUDIOCODEC, audioCodec);
-      intent.putExtra(CallActivity.EXTRA_DISPLAY_HUD, displayHud);
       intent.putExtra(CallActivity.EXTRA_TRACING, tracing);
       intent.putExtra(CallActivity.EXTRA_ENABLE_RTCEVENTLOG, rtcEventLogEnabled);
       intent.putExtra(CallActivity.EXTRA_CMDLINE, commandLineRun);

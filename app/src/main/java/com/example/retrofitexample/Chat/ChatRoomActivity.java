@@ -387,6 +387,8 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
             }
         }
 
+        // 영상 통화
+        Log.d(TAG, "onActivityResult: commandLineRun: " + commandLineRun);
         if (requestCode == CONNECTION_REQUEST && commandLineRun) {
             Log.d(TAG, "Return: " + resultCode);
             setResult(resultCode);
@@ -1225,12 +1227,20 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
      * Get a value from the shared preference or from the intent, if it does not
      * exist the default is used.
      */
+    // SharedPreference 혹은 intent로 부터 boolean 값을 받아 온다.
     private boolean sharedPrefGetBoolean(
             int attributeId, String intentName, int defaultId, boolean useFromIntent) {
         boolean defaultValue = Boolean.parseBoolean(getString(defaultId));
+
+        // useFromIntent가 true일 경우
         if (useFromIntent) {
+            // intent의 value를 가져 온다.
             return getIntent().getBooleanExtra(intentName, defaultValue);
+
+        // useFromIntent가 false일 경우
         } else {
+
+            //
             String attributeName = getString(attributeId);
             return sharedPref.getBoolean(attributeName, defaultValue);
         }
@@ -1272,32 +1282,39 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
                 keyprefRoomServerUrl, getString(R.string.pref_room_server_url_default));
 
         // Video call enabled flag.
+        // 영상 통화 화면 출력 여부
         boolean videoCallEnabled = sharedPrefGetBoolean(R.string.pref_videocall_key,
                 CallActivity.EXTRA_VIDEO_CALL, R.string.pref_videocall_default, useValuesFromIntent);
 
+        // 화면 캡쳐 여부
         // Use screencapture option.
         boolean useScreencapture = sharedPrefGetBoolean(R.string.pref_screencapture_key,
                 CallActivity.EXTRA_SCREENCAPTURE, R.string.pref_screencapture_default, useValuesFromIntent);
 
+        // 두번째 카메라 사용 여부
         // Use Camera2 option.
         boolean useCamera2 = sharedPrefGetBoolean(R.string.pref_camera2_key, CallActivity.EXTRA_CAMERA2,
                 R.string.pref_camera2_default, useValuesFromIntent);
 
+        // 비디오, 오디오 기본 코덱
         // Get default codecs.
         String videoCodec = sharedPrefGetString(R.string.pref_videocodec_key,
                 CallActivity.EXTRA_VIDEOCODEC, R.string.pref_videocodec_default, useValuesFromIntent);
         String audioCodec = sharedPrefGetString(R.string.pref_audiocodec_key,
                 CallActivity.EXTRA_AUDIOCODEC, R.string.pref_audiocodec_default, useValuesFromIntent);
 
+        //  하드웨어 코덱 사용 여부
         // Check HW codec flag.
         boolean hwCodec = sharedPrefGetBoolean(R.string.pref_hwcodec_key,
                 CallActivity.EXTRA_HWCODEC_ENABLED, R.string.pref_hwcodec_default, useValuesFromIntent);
+
 
         // Check Capture to texture.
         boolean captureToTexture = sharedPrefGetBoolean(R.string.pref_capturetotexture_key,
                 CallActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, R.string.pref_capturetotexture_default,
                 useValuesFromIntent);
 
+        //FlexFEC. on off
         // Check FlexFEC.
         boolean flexfecEnabled = sharedPrefGetBoolean(R.string.pref_flexfec_key,
                 CallActivity.EXTRA_FLEXFEC_ENABLED, R.string.pref_flexfec_default, useValuesFromIntent);
@@ -1307,9 +1324,11 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
                 CallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, R.string.pref_noaudioprocessing_default,
                 useValuesFromIntent);
 
+        // aec dump
         boolean aecDump = sharedPrefGetBoolean(R.string.pref_aecdump_key,
                 CallActivity.EXTRA_AECDUMP_ENABLED, R.string.pref_aecdump_default, useValuesFromIntent);
 
+        // 오디오를 파일로 저장한다.
         boolean saveInputAudioToFile =
                 sharedPrefGetBoolean(R.string.pref_enable_save_input_audio_to_file_key,
                         CallActivity.EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED,
@@ -1339,21 +1358,35 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
                 R.string.pref_disable_webrtc_agc_and_hpf_key, CallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF,
                 R.string.pref_disable_webrtc_agc_and_hpf_key, useValuesFromIntent);
 
+
         // Get video resolution from settings.
-        int videoWidth = 0;
-        int videoHeight = 0;
+        // 설정한 해상도 값을 가져온다.
+        int videoWidth = 0; // 화면 가로
+        int videoHeight = 0; // 화면 세로
+
+        // 체크되어 있는 해상도 값을 가져와서 width, height에 각각 저장해 준다.
         if (useValuesFromIntent) {
             videoWidth = getIntent().getIntExtra(CallActivity.EXTRA_VIDEO_WIDTH, 0);
             videoHeight = getIntent().getIntExtra(CallActivity.EXTRA_VIDEO_HEIGHT, 0);
         }
+
+        // 가로, 세로 값이 둘다 0이면 기본 해상도로 설정한다.
         if (videoWidth == 0 && videoHeight == 0) {
+
+            // default 문자를 shared에서 가져온다.
             String resolution =
                     sharedPref.getString(keyprefResolution, getString(R.string.pref_resolution_default));
+
+            // (000x000)문자열을 잘라서 width, height 값을 구분해 준다.
             String[] dimensions = resolution.split("[ x]+");
             if (dimensions.length == 2) {
+
+                // String으로 되어있는 숫자를 int로 변환시켜서 width->0번 인덱스, heigth->1번 인덱스에 넣어 준다.
                 try {
                     videoWidth = Integer.parseInt(dimensions[0]);
                     videoHeight = Integer.parseInt(dimensions[1]);
+
+                    // 해상도 설정이 잘못됐을 경우
                 } catch (NumberFormatException e) {
                     videoWidth = 0;
                     videoHeight = 0;
@@ -1362,17 +1395,32 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
             }
         }
 
-        // Get camera fps from settings.
+        // 설정에서 카메라 FPS 값을 받아온다.
         int cameraFps = 0;
+        Log.d(TAG, "connectToRoom: useValuesFromIntent: " + useValuesFromIntent);
+
+        // useValuesFromIntent이 true면 설정한 cameraFps를 받아 온다.
         if (useValuesFromIntent) {
+
             cameraFps = getIntent().getIntExtra(CallActivity.EXTRA_VIDEO_FPS, 0);
+            Log.d(TAG, "connectToRoom: cameraFps: " + cameraFps);
         }
+
+
+        // camera fps 설정
         if (cameraFps == 0) {
+
             String fps = sharedPref.getString(keyprefFps, getString(R.string.pref_fps_default));
-            String[] fpsValues = fps.split("[ x]+");
+            Log.d(TAG, "connectToRoom: fps: " + fps);
+            String[] fpsValues = fps.split("[ x]+"); // FPS 설정 값
+            Log.d(TAG, "connectToRoom: fpsValues.length: " + fpsValues.length);
+            Log.d(TAG, "connectToRoom: fpsValues[0]: " + fpsValues[0]);
+
+            // fpsValues가 Default가 아닌 15 or 30 fps인 경우
             if (fpsValues.length == 2) {
                 try {
                     cameraFps = Integer.parseInt(fpsValues[0]);
+                    Log.d(TAG, "connectToRoom: cameraFps: " + cameraFps);
                 } catch (NumberFormatException e) {
                     cameraFps = 0;
                     Log.e(TAG, "Wrong camera fps setting: " + fps);
@@ -1381,42 +1429,51 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         }
 
         // Check capture quality slider flag.
+        // 화면 캡쳐 퀄리티 설정
         boolean captureQualitySlider = sharedPrefGetBoolean(R.string.pref_capturequalityslider_key,
                 CallActivity.EXTRA_VIDEO_CAPTUREQUALITYSLIDER_ENABLED,
                 R.string.pref_capturequalityslider_default, useValuesFromIntent);
 
         // Get video and audio start bitrate.
+        // 비디오 비트레이트 설정
         int videoStartBitrate = 0;
         if (useValuesFromIntent) {
             videoStartBitrate = getIntent().getIntExtra(CallActivity.EXTRA_VIDEO_BITRATE, 0);
+            Log.d(TAG, "connectToRoom: videoStartBitrate: " + videoStartBitrate);
         }
         if (videoStartBitrate == 0) {
             String bitrateTypeDefault = getString(R.string.pref_maxvideobitrate_default);
             String bitrateType = sharedPref.getString(keyprefVideoBitrateType, bitrateTypeDefault);
+            Log.d(TAG, "connectToRoom: birateType: " + bitrateType);
+
             if (!bitrateType.equals(bitrateTypeDefault)) {
                 String bitrateValue = sharedPref.getString(
                         keyprefVideoBitrateValue, getString(R.string.pref_maxvideobitratevalue_default));
+                Log.d(TAG, "connectToRoom: bitrateValue: " + bitrateValue);
                 videoStartBitrate = Integer.parseInt(bitrateValue);
+                Log.d(TAG, "connectToRoom: videoStartBitrate: " + videoStartBitrate);
             }
         }
 
+        // 오디오 비트레이트 설정
         int audioStartBitrate = 0;
         if (useValuesFromIntent) {
             audioStartBitrate = getIntent().getIntExtra(CallActivity.EXTRA_AUDIO_BITRATE, 0);
+            Log.d(TAG, "connectToRoom: audioStartBitrate: " + audioStartBitrate);
         }
         if (audioStartBitrate == 0) {
             String bitrateTypeDefault = getString(R.string.pref_startaudiobitrate_default);
             String bitrateType = sharedPref.getString(keyprefAudioBitrateType, bitrateTypeDefault);
+            Log.d(TAG, "connectToRoom: bitrateType: " + bitrateType);
+
             if (!bitrateType.equals(bitrateTypeDefault)) {
                 String bitrateValue = sharedPref.getString(
                         keyprefAudioBitrateValue, getString(R.string.pref_startaudiobitratevalue_default));
                 audioStartBitrate = Integer.parseInt(bitrateValue);
+                Log.d(TAG, "connectToRoom: audioStartBitrate: " + audioStartBitrate);
             }
         }
 
-        // Check statistics display option.
-        boolean displayHud = sharedPrefGetBoolean(R.string.pref_displayhud_key,
-                CallActivity.EXTRA_DISPLAY_HUD, R.string.pref_displayhud_default, useValuesFromIntent);
 
         boolean tracing = sharedPrefGetBoolean(R.string.pref_tracing_key, CallActivity.EXTRA_TRACING,
                 R.string.pref_tracing_default, useValuesFromIntent);
@@ -1445,36 +1502,62 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         String protocol = sharedPrefGetString(R.string.pref_data_protocol_key,
                 CallActivity.EXTRA_PROTOCOL, R.string.pref_data_protocol_default, useValuesFromIntent);
 
-        // Start AppRTCMobile activity.
+        // Start CallActivity.
         Log.d(TAG, "Connecting to room " + roomId + " at URL " + roomUrl);
+
+        // roomUrl이 http or https주소가 맞으면
         if (validateUrl(roomUrl)) {
             Uri uri = Uri.parse(roomUrl);
+            Log.d(TAG, "connectToRoom: uri: " + uri);
             Intent intent = new Intent(this, CallActivity.class);
             intent.setData(uri);
+
+            // CallActivity에 선언 한 변수를 인텐트 명으로 지정한다.
+            // 방 번호
             intent.putExtra(CallActivity.EXTRA_ROOMID, roomId);
+
+            // 설정창 내용
+            // 영상 통화 화면
             intent.putExtra(CallActivity.EXTRA_VIDEO_CALL, videoCallEnabled);
+            // 화면 캡쳐
             intent.putExtra(CallActivity.EXTRA_SCREENCAPTURE, useScreencapture);
+            // 카메라 2
             intent.putExtra(CallActivity.EXTRA_CAMERA2, useCamera2);
+            // 카메라 가로
             intent.putExtra(CallActivity.EXTRA_VIDEO_WIDTH, videoWidth);
+            // 카메라 세로
             intent.putExtra(CallActivity.EXTRA_VIDEO_HEIGHT, videoHeight);
+            // 카메라 FPS
             intent.putExtra(CallActivity.EXTRA_VIDEO_FPS, cameraFps);
+            // 캡쳐 퀄리티 슬라이더 표시
             intent.putExtra(CallActivity.EXTRA_VIDEO_CAPTUREQUALITYSLIDER_ENABLED, captureQualitySlider);
+            // 비디오 비트레이트
             intent.putExtra(CallActivity.EXTRA_VIDEO_BITRATE, videoStartBitrate);
+            // 비디오 코덱
             intent.putExtra(CallActivity.EXTRA_VIDEOCODEC, videoCodec);
+            // 하드웨어 코덱
             intent.putExtra(CallActivity.EXTRA_HWCODEC_ENABLED, hwCodec);
             intent.putExtra(CallActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, captureToTexture);
             intent.putExtra(CallActivity.EXTRA_FLEXFEC_ENABLED, flexfecEnabled);
+            // 오디오 작동 중지
             intent.putExtra(CallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, noAudioProcessing);
+            // 오디오 녹음
             intent.putExtra(CallActivity.EXTRA_AECDUMP_ENABLED, aecDump);
+            // 오디오 녹음 파일로 저장
             intent.putExtra(CallActivity.EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED, saveInputAudioToFile);
+            // opensl es 를 이용해 오디오를 플레이
             intent.putExtra(CallActivity.EXTRA_OPENSLES_ENABLED, useOpenSLES);
+
+            // 음성 옵션
             intent.putExtra(CallActivity.EXTRA_DISABLE_BUILT_IN_AEC, disableBuiltInAEC);
             intent.putExtra(CallActivity.EXTRA_DISABLE_BUILT_IN_AGC, disableBuiltInAGC);
             intent.putExtra(CallActivity.EXTRA_DISABLE_BUILT_IN_NS, disableBuiltInNS);
             intent.putExtra(CallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, disableWebRtcAGCAndHPF);
+
+            //오디오 비트레이트
             intent.putExtra(CallActivity.EXTRA_AUDIO_BITRATE, audioStartBitrate);
+            // 오디오 코덱
             intent.putExtra(CallActivity.EXTRA_AUDIOCODEC, audioCodec);
-            intent.putExtra(CallActivity.EXTRA_DISPLAY_HUD, displayHud);
             intent.putExtra(CallActivity.EXTRA_TRACING, tracing);
             intent.putExtra(CallActivity.EXTRA_ENABLE_RTCEVENTLOG, rtcEventLogEnabled);
             intent.putExtra(CallActivity.EXTRA_CMDLINE, commandLineRun);
@@ -1518,19 +1601,25 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
 
             // 방 번호와 발신자 이메일을 함께 보내준다.
             Log.d(TAG, "connectToRoom: currentRoomNo: " + roomNo);
-            intent.putExtra("roomNo", roomNo);
-            intent.putExtra("senderEmail", loggedUseremail);
-            intent.putExtra("yourEmail", yourEmail);
+            intent.putExtra("roomNo", roomNo); // 채팅 방 번호
+            intent.putExtra("senderEmail", loggedUseremail); // 영상 통화 발신자
+            intent.putExtra("yourEmail", yourEmail); // 영상 통화 수신자
 
             startActivityForResult(intent, CONNECTION_REQUEST);
         }
     }
 
     private boolean validateUrl(String url) {
+        Log.d(TAG, "validateUrl: url: " + url);
+        Log.d(TAG, "validateUrl: URLUtil.isHttpsUrl(url): " + URLUtil.isHttpsUrl(url));
+        Log.d(TAG, "validateUrl: URLUtil.isHttpUrl(url): " + URLUtil.isHttpUrl(url));
+
+        // url https이거나 http이면 true
         if (URLUtil.isHttpsUrl(url) || URLUtil.isHttpUrl(url)) {
             return true;
         }
 
+        //https url or http url 둘다 true가 아닐 경우 alert 알림을 띄우고 false를 되돌려 준다.
         new AlertDialog.Builder(this)
                 .setTitle(getText(R.string.invalid_url_title))
                 .setMessage(getString(R.string.invalid_url_text, url))

@@ -101,6 +101,7 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
                                                       ChatService.ServiceCallbacks{
   private static final String TAG = "CallActivity";
 
+  // intent 받을 변수명
   public static final String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";
   public static final String EXTRA_URLPARAMETERS = "org.appspot.apprtc.URLPARAMETERS";
   public static final String EXTRA_LOOPBACK = "org.appspot.apprtc.LOOPBACK";
@@ -130,7 +131,6 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   public static final String EXTRA_DISABLE_BUILT_IN_NS = "org.appspot.apprtc.DISABLE_BUILT_IN_NS";
   public static final String EXTRA_DISABLE_WEBRTC_AGC_AND_HPF =
       "org.appspot.apprtc.DISABLE_WEBRTC_GAIN_CONTROL";
-  public static final String EXTRA_DISPLAY_HUD = "org.appspot.apprtc.DISPLAY_HUD";
   public static final String EXTRA_TRACING = "org.appspot.apprtc.TRACING";
   public static final String EXTRA_CMDLINE = "org.appspot.apprtc.CMDLINE";
   public static final String EXTRA_RUNTIME = "org.appspot.apprtc.RUNTIME";
@@ -159,10 +159,13 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
   SendThread send; // 채팅 종료 메세지 보내주기 위한 스레드
 
   // List of mandatory application permissions.
+  // 반드시 포함되어야 하는 퍼미션
+  // 오디오 세팅 수정, 오디오 녹음, 인터넷 접속
   private static final String[] MANDATORY_PERMISSIONS = {"android.permission.MODIFY_AUDIO_SETTINGS",
       "android.permission.RECORD_AUDIO", "android.permission.INTERNET"};
 
   // Peer connection statistics callback period in ms.
+  // 영상통화 콜백 딜레이 시간
   private static final int STAT_CALLBACK_PERIOD = 1000;
 
   private static class ProxyVideoSink implements VideoSink {
@@ -217,12 +220,10 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
 
   // Controls
   private CallFragment callFragment;
-//  private HudFragment hudFragment;
-//  private CpuMonitor cpuMonitor;
 
-  int roomNo;
-  String senderEmail;
-  String receiverEmail;
+  int roomNo; // 방 번호
+  String senderEmail; // 영상 통화 보낸 사람 이메일
+  String receiverEmail; // 영상 통화 받는 사람 이메일
 
   ReceiveCallActivity RCA;
   @Override
@@ -234,12 +235,13 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
     Thread.setDefaultUncaughtExceptionHandler(new UnhandledExceptionHandler(this));
     Log.d(TAG, "onCreate: video call started");
 
+    // 전화 수신 대기 액티비티
     RCA = (ReceiveCallActivity) ReceiveCallActivity._Receive_Call_Activity;
 
 
     // 영상 통화 액티비티를 입장해 있는 방의 번호와 일치시킨다.
     Intent getroomnointent = getIntent();
-    roomNo = getroomnointent.getIntExtra("roomNo", -1);
+    roomNo = getroomnointent.getIntExtra("roomNo", -1); // 방 번호
     senderEmail = getroomnointent.getStringExtra("senderEmail"); // 영상 통화 발신자
     receiverEmail = getroomnointent.getStringExtra("yourEmail"); // 영상 통화 수신자
 
@@ -251,25 +253,37 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
 
     // Set window styles for fullscreen-window size. Needs to be done before
     // adding content.
-    requestWindowFeature(Window.FEATURE_NO_TITLE);
+    // requestWindowFeature -> 확장 윈도우 기능을 활성화 하는 메소드
+    requestWindowFeature(Window.FEATURE_NO_TITLE);// 프레임의 타이틀 제거
+
+    //  이 창이 표시되어있는 동안 모든 화면 장식을 숨김,
+    //  화면을 켠 상태로 유지,
+    //  폰이 락 상태이면 보여줌,
+    //  화면을 ON 시킨다.
     getWindow().addFlags(LayoutParams.FLAG_FULLSCREEN | LayoutParams.FLAG_KEEP_SCREEN_ON
         | LayoutParams.FLAG_SHOW_WHEN_LOCKED | LayoutParams.FLAG_TURN_SCREEN_ON);
+
     getWindow().getDecorView().setSystemUiVisibility(getSystemUiVisibility());
+    // xml 뷰 연결
     setContentView(R.layout.activity_call);
 
     connected = false;
     signalingParameters = null;
 
     // Create UI controls.
+    // 카메라 제어 관련 버튼
     pipRenderer = findViewById(R.id.pip_video_view);
+    // 영상 통화 풀 스크린
     fullscreenRenderer = findViewById(R.id.fullscreen_video_view);
+    // 영상 통화 제어 버튼 프래그먼트
     callFragment = new CallFragment();
-    //hudFragment = new HudFragment();
 
     // Show/hide call control fragment on view click.
     View.OnClickListener listener = new View.OnClickListener() {
       @Override
       public void onClick(View view) {
+
+        // 클릭 시 제어 버튼이 사라진다.
         toggleCallControlFragmentVisibility();
       }
     };
@@ -345,9 +359,11 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
       return;
     }
 
+
     boolean loopback = intent.getBooleanExtra(EXTRA_LOOPBACK, false);
     boolean tracing = intent.getBooleanExtra(EXTRA_TRACING, false);
 
+    // 비디오의 해상도
     int videoWidth = intent.getIntExtra(EXTRA_VIDEO_WIDTH, 0);
     int videoHeight = intent.getIntExtra(EXTRA_VIDEO_HEIGHT, 0);
 
@@ -791,7 +807,7 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
       @Override
       public void onAudioDeviceChanged(
           AudioDevice audioDevice, Set<AudioDevice> availableAudioDevices) {
-        onAudioManagerDevicesChanged(audioDevice, availableAudioDevices);
+          onAudioManagerDevicesChanged(audioDevice, availableAudioDevices);
       }
     });
   }
