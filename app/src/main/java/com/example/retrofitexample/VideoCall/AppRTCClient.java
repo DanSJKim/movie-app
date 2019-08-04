@@ -17,6 +17,12 @@ import org.webrtc.SessionDescription;
 import java.util.List;
 
 /**
+ * 영상통화를 하기 위해 클라이언트 객체를 만들고, 각 클라이언트 클래스에서 콜백메소드를 호출토록 하는 인터페이스.
+ *
+ * - 클라이언트 클래스는 WebSocketClient, TCPClient가 있음.
+ */
+
+/**
  * AppRTCClient is the interface representing an AppRTC client.
  */
 public interface AppRTCClient {

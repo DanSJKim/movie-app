@@ -70,7 +70,6 @@ import com.example.retrofitexample.Retrofit.Api;
 import com.example.retrofitexample.Retrofit.ApiClient;
 import com.example.retrofitexample.VideoCall.CallActivity;
 import com.example.retrofitexample.VideoCall.ConnectActivity;
-import com.example.retrofitexample.VideoCall.SettingsActivity;
 import static com.example.retrofitexample.BootReceiver.isService;
 
 import org.json.JSONArray;
@@ -144,8 +143,8 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
 
     //webrtc
     private static final int CONNECTION_REQUEST = 1;
+    // 퍼미션 요청 번호
     private static final int PERMISSION_REQUEST = 2;
-    private static final int REMOVE_FAVORITE_INDEX = 0;
     private static boolean commandLineRun;
 
     private SharedPreferences sharedPref;
@@ -156,8 +155,8 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
     private String keyprefAudioBitrateType;
     private String keyprefAudioBitrateValue;
     private String keyprefRoomServerUrl;
-    private String keyprefRoom;
 
+    // 영상통화 방의 고유 번호
     String uniqueID;
 
 
@@ -627,6 +626,8 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
                     // 자바 서버로 메세지 보내주기 위한 쓰레드 생성
                     send = new SendThread(socket, mode, roomNo, myEmail, yourEmail, response.body().getMessage(), date, time); // ChatService에서 생성한 클라이언트 소켓 변수
                     send.start();
+
+                    // 영상 통화 시작 메세지
                 }else if(mode == 4){
                     send = new SendThread(socket, mode, roomNo, myEmail, yourEmail, message, date, time); // ChatService에서 생성한 클라이언트 소켓 변수
                     send.start();
@@ -752,6 +753,8 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
                         dos.writeUTF(jo.toString());
 
                         if(mode == 4){
+
+                            // 영상 통화 시작하기
                             webrtcstart();
                         }
 
@@ -1041,39 +1044,29 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         Log.d(TAG, "webrtcstart: ");
 
         // Get setting keys.
+        // xml 환경설정 파일의 기본값을 설정한다.
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+        // SharedPreferences에 저장된 값에 접근 헌더,
+        // 지정된 컨텍스트에서 기본 설정 프레임 워크가 사용하는 기본 파일을 가리키는 SharedPreferences 인스턴스를 가져옵니다.
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        // String.xml에 설정한 문자열 값을 아래 변수들에 넣어 준다.
+        // resolution_preference
         keyprefResolution = getString(R.string.pref_resolution_key);
+        // fps_preference
         keyprefFps = getString(R.string.pref_fps_key);
+        // maxvideobitrate_preference
         keyprefVideoBitrateType = getString(R.string.pref_maxvideobitrate_key);
+        // maxvideobitratevalue_preference
         keyprefVideoBitrateValue = getString(R.string.pref_maxvideobitratevalue_key);
+        // startaudiobitrate_preference
         keyprefAudioBitrateType = getString(R.string.pref_startaudiobitrate_key);
+        // startaudiobitratevalue_preference
         keyprefAudioBitrateValue = getString(R.string.pref_startaudiobitratevalue_key);
+        // room_server_url_preference
         keyprefRoomServerUrl = getString(R.string.pref_room_server_url_key);
-        keyprefRoom = getString(R.string.pref_room_key);
 
+        // 퍼미션 요청 메소드
         requestPermissions();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.connect_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle presses on the action bar items.
-        if (item.getItemId() == R.id.action_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-            return true;
-        } else if (item.getItemId() == R.id.action_loopback) {
-            connectToRoom(null, false, true, false, 0);
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
-        }
     }
 
 
@@ -1083,97 +1076,127 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         if (requestCode == PERMISSION_REQUEST) {
             Log.d(TAG, "onRequestPermissionsResult: ");
             String[] missingPermissions = getMissingPermissions();
-//      if (missingPermissions.length != 0) {
-//        // User didn't grant all the permissions. Warn that the application might not work
-//        // correctly.
-//        new AlertDialog.Builder(this)
-//            .setMessage(R.string.missing_permissions_try_again)
-//            .setPositiveButton(R.string.yes,
-//                (dialog, id) -> {
-//                  // User wants to try giving the permissions again.
-//                  dialog.cancel();
-//                  requestPermissions();
-//                })
-//            .setNegativeButton(R.string.no,
-//                (dialog, id) -> {
-//                  // User doesn't want to give the permissions.
-//                  dialog.cancel();
-//                  onPermissionsGranted();
-//                })
-//            .show();
-//      } else {
-            // All permissions granted.
-            onPermissionsGranted();
-            //}
+            Log.d(TAG, "onRequestPermissionsResult: missingPermissions: " + missingPermissions);
+
+              if (missingPermissions.length != 0) {
+                  Log.d(TAG, "onRequestPermissionsResult: missingPermissions.length: " + missingPermissions.length);
+                // User didn't grant all the permissions. Warn that the application might not work
+                // correctly.
+                new AlertDialog.Builder(this)
+                    .setMessage(R.string.missing_permissions_try_again)
+                    .setPositiveButton(R.string.yes,
+                        (dialog, id) -> {
+                          // User wants to try giving the permissions again.
+                          dialog.cancel();
+                          requestPermissions();
+                        })
+                    .setNegativeButton(R.string.no,
+                        (dialog, id) -> {
+                          // User doesn't want to give the permissions.
+                          dialog.cancel();
+                          onPermissionsGranted();
+                        })
+                    .show();
+              } else {
+                  Log.d(TAG, "onRequestPermissionsResult: missingPermissions.length: " + missingPermissions.length);
+                    // All permissions granted.
+                    onPermissionsGranted();
+              }
         }
     }
 
+    // 퍼미션이 승인됐을 경우 실행되는 메소드
     private void onPermissionsGranted() {
         Log.d(TAG, "onPermissionsGranted: ");
 
         // 영통 자동 연결
         Log.d(TAG, "onPermissionsGranted: uniqueID: " + uniqueID);
-        connectToRoom(uniqueID, false, false, false, 0);
+        connectToRoom(uniqueID,false, 0);
 
-        // If an implicit VIEW intent is launching the app, go directly to that URL.
-        final Intent intent = getIntent();
-        if ("android.intent.action.VIEW".equals(intent.getAction()) && !commandLineRun) {
-            boolean loopback = intent.getBooleanExtra(CallActivity.EXTRA_LOOPBACK, false);
-            int runTimeMs = intent.getIntExtra(CallActivity.EXTRA_RUNTIME, 0);
-            boolean useValuesFromIntent =
-                    intent.getBooleanExtra(CallActivity.EXTRA_USE_VALUES_FROM_INTENT, false);
-            String room = sharedPref.getString(keyprefRoom, "");
-            Log.d(TAG, "onPermissionsGranted: connectToRoom");
-            connectToRoom(room, true, loopback, useValuesFromIntent, runTimeMs);
-        }
     }
 
     @TargetApi(Build.VERSION_CODES.M)
     private void requestPermissions() {
         Log.d(TAG, "requestPermissions: ");
+
+        // SDK
+        // SDK 버전이 마시멜로보다 낮으면 퍼미션 요청을 하지 않고 넘어간다.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             Log.d(TAG, "requestPermissions: Build.VERSION.SDK_INT < Build.VERSION_CODES.M");
-            // Dynamic permissions are not required before Android M.
+            // 기기 SDK 버전
+            Log.d(TAG, "requestPermissions: Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
+            // 마시멜로 버전 코드
+            Log.d(TAG, "requestPermissions: Build.VERSION_CODES.M: " + Build.VERSION_CODES.M);
+            // 마시멜로 이전 버전은 권한을 사용자에게 요청하지 않는다.
             onPermissionsGranted();
             return;
         }
 
+        // 퍼미션 누락을 확인해서 누락된 퍼미션을 missingPermissions 배열에 담아 준다.
         String[] missingPermissions = getMissingPermissions();
+        // 누락된 퍼미션이 있을 경우
         if (missingPermissions.length != 0) {
             Log.d(TAG, "requestPermissions: missingPermissions.length != 0");
+            Log.d(TAG, "requestPermissions: missingPermissions.length: " + missingPermissions.length);
+
+            // 앱에 권한을 요청한다.
             requestPermissions(missingPermissions, PERMISSION_REQUEST);
+
+        //  누락된 퍼미션이 없을 경우
         } else {
             Log.d(TAG, "requestPermissions: else");
             onPermissionsGranted();
         }
     }
 
+
+    // requestPermissions에서 퍼미션 요청 시 누락 된 퍼미션을 찾아서 배열에 저장한다.
     @TargetApi(Build.VERSION_CODES.M)
     private String[] getMissingPermissions() {
+
+        // SDK 버전이 마시멜로보다 낮으면 조건 실행
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             Log.d(TAG, "getMissingPermissions: Build.VERSION.SDK_INT < Build.VERSION_CODES.M");
+            Log.d(TAG, "getMissingPermissions: 현재 기기에서 실행되고 있는 SDK 버전: " + Build.VERSION.SDK_INT);
+            Log.d(TAG, "getMissingPermissions: 마시멜로우 버전: " + Build.VERSION_CODES.M);
             return new String[0];
         }
 
-        PackageInfo info;
+        PackageInfo info; // 패키지의 내용에 대한 전체 정보.AndroidManifest.xml에서 수집 한 모든 정보를 담은 클래스
         try {
+
+            //시스템에 설치된 응용 프로그램 패키지에 대한 전체 정보를 검색한다..
+            //PackageManager.GET_PERMISSIONS : permissions에서 패키지의 사용 권한에 대한 정보를 반환한다.
             info = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_PERMISSIONS);
+            Log.d(TAG, "getMissingPermissions: info getPackageName: " + getPackageName());
+            Log.d(TAG, "getMissingPermissions: PackageManager.GET_PERMISSIONS: " + PackageManager.GET_PERMISSIONS);
+
+
+        // 퍼미션 검색 실패시
         } catch (PackageManager.NameNotFoundException e) {
             Log.w(TAG, "Failed to retrieve permissions.");
             return new String[0];
         }
 
+        // 요청 된 퍼미션이 없음
         if (info.requestedPermissions == null) {
             Log.w(TAG, "No requested permissions.");
             return new String[0];
         }
 
+
+        // 누락 된 퍼미션을 담는 배열을 선언한다.
         ArrayList<String> missingPermissions = new ArrayList<>();
+        // 요청 된 모든 퍼미션의 크기만큼 반복해서 퍼미션을 거절할 경우 missingPermissions 배열에 거절한 퍼미션을 추가해 준다
         for (int i = 0; i < info.requestedPermissions.length; i++) {
             if ((info.requestedPermissionsFlags[i] & PackageInfo.REQUESTED_PERMISSION_GRANTED) == 0) {
+
+                Log.d(TAG, "getMissingPermissions: " + i + " : " + info.requestedPermissions[i]);
                 missingPermissions.add(info.requestedPermissions[i]);
             }
         }
+
+        // 누락 된 퍼미션
         Log.d(TAG, "Missing permissions: " + missingPermissions);
 
         return missingPermissions.toArray(new String[missingPermissions.size()]);
@@ -1236,17 +1259,15 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
     }
 
     @SuppressWarnings("StringSplitter")
-    private void connectToRoom(String roomId, boolean commandLineRun, boolean loopback,
-                               boolean useValuesFromIntent, int runTimeMs) {
+    private void connectToRoom(String roomId, boolean useValuesFromIntent, int runTimeMs) {
         Log.d(TAG, "connectToRoom start: ");
         ChatRoomActivity.commandLineRun = commandLineRun;
 
-        // roomId is random for loopback.
-        if (loopback) {
-            Log.d(TAG, "connectToRoom: loopback: ");
-            roomId = Integer.toString((new Random()).nextInt(100000000));
-        }
+        //roomId 방번호
+        //useValuseFromIntent 영상통화 옵션 체크 여부
+        //
 
+        // 영상통화 url 주소를 SharedPreferences에서 가져온다.
         String roomUrl = sharedPref.getString(
                 keyprefRoomServerUrl, getString(R.string.pref_room_server_url_default));
 
@@ -1431,7 +1452,6 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
             Intent intent = new Intent(this, CallActivity.class);
             intent.setData(uri);
             intent.putExtra(CallActivity.EXTRA_ROOMID, roomId);
-            intent.putExtra(CallActivity.EXTRA_LOOPBACK, loopback);
             intent.putExtra(CallActivity.EXTRA_VIDEO_CALL, videoCallEnabled);
             intent.putExtra(CallActivity.EXTRA_SCREENCAPTURE, useScreencapture);
             intent.putExtra(CallActivity.EXTRA_CAMERA2, useCamera2);
@@ -1527,14 +1547,6 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
         return false;
     }
 
-    private final AdapterView.OnItemClickListener roomListClickListener =
-            new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    String roomId = ((TextView) view).getText().toString();
-                    connectToRoom(roomId, false, false, false, 0);
-                }
-            };
 
 
 }

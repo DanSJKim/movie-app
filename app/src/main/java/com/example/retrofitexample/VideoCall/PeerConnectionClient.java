@@ -36,7 +36,6 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.example.retrofitexample.VideoCall.AppRTCClient.SignalingParameters;
-import com.example.retrofitexample.VideoCall.RecordedAudioToFileController;
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
 import org.webrtc.CameraVideoCapturer;
@@ -170,12 +169,6 @@ public class PeerConnectionClient {
   @Nullable
   private DataChannel dataChannel;
   private final boolean dataChannelEnabled;
-  // Enable RtcEventLog.
-  @Nullable
-  private RtcEventLog rtcEventLog;
-  // Implements the WebRtcAudioRecordSamplesReadyCallback interface and writes
-  // recorded audio samples to an output file.
-  @Nullable private RecordedAudioToFileController saveRecordedAudioToFile;
 
   /**
    * Peer connection parameters.
@@ -412,7 +405,7 @@ public class PeerConnectionClient {
     if (peerConnectionParameters.saveInputAudioToFile) {
       if (!peerConnectionParameters.useOpenSLES) {
         Log.d(TAG, "Enable recording of microphone input audio to file");
-        saveRecordedAudioToFile = new RecordedAudioToFileController(executor);
+        //saveRecordedAudioToFile = new RecordedAudioToFileController(executor);
       } else {
         // TODO(henrika): ensure that the UI reflects that if OpenSL ES is selected,
         // then the "Save inut audio to file" option shall be grayed out.
@@ -501,7 +494,7 @@ public class PeerConnectionClient {
     };
 
     return JavaAudioDeviceModule.builder(appContext)
-        .setSamplesReadyCallback(saveRecordedAudioToFile)
+        //.setSamplesReadyCallback(saveRecordedAudioToFile)
         .setUseHardwareAcousticEchoCanceler(!peerConnectionParameters.disableBuiltInAEC)
         .setUseHardwareNoiseSuppressor(!peerConnectionParameters.disableBuiltInNS)
         .setAudioRecordErrorCallback(audioRecordErrorCallback)
@@ -621,11 +614,11 @@ public class PeerConnectionClient {
       }
     }
 
-    if (saveRecordedAudioToFile != null) {
-      if (saveRecordedAudioToFile.start()) {
-        Log.d(TAG, "Recording input audio to file is activated");
-      }
-    }
+//    if (saveRecordedAudioToFile != null) {
+//      if (saveRecordedAudioToFile.start()) {
+//        Log.d(TAG, "Recording input audio to file is activated");
+//      }
+//    }
     Log.d(TAG, "Peer connection created.");
   }
 
@@ -645,8 +638,8 @@ public class PeerConnectionClient {
       Log.d(TAG, "RtcEventLog is disabled.");
       return;
     }
-    rtcEventLog = new RtcEventLog(peerConnection);
-    rtcEventLog.start(createRtcEventLogOutputFile());
+//    rtcEventLog = new RtcEventLog(peerConnection);
+//    rtcEventLog.start(createRtcEventLogOutputFile());
   }
 
   private void closeInternal() {
@@ -659,11 +652,11 @@ public class PeerConnectionClient {
       dataChannel.dispose();
       dataChannel = null;
     }
-    if (rtcEventLog != null) {
-      // RtcEventLog should stop before the peer connection is disposed.
-      rtcEventLog.stop();
-      rtcEventLog = null;
-    }
+//    if (rtcEventLog != null) {
+//      // RtcEventLog should stop before the peer connection is disposed.
+//      rtcEventLog.stop();
+//      rtcEventLog = null;
+//    }
     if (peerConnection != null) {
       peerConnection.dispose();
       peerConnection = null;
@@ -693,11 +686,11 @@ public class PeerConnectionClient {
       surfaceTextureHelper.dispose();
       surfaceTextureHelper = null;
     }
-    if (saveRecordedAudioToFile != null) {
-      Log.d(TAG, "Closing audio file for recorded input audio.");
-      saveRecordedAudioToFile.stop();
-      saveRecordedAudioToFile = null;
-    }
+//    if (saveRecordedAudioToFile != null) {
+//      Log.d(TAG, "Closing audio file for recorded input audio.");
+//      saveRecordedAudioToFile.stop();
+//      saveRecordedAudioToFile = null;
+//    }
     localRender = null;
     remoteSinks = null;
     Log.d(TAG, "Closing peer connection factory.");

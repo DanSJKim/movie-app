@@ -165,7 +165,7 @@ public class ChatService extends Service {
             try {
                 Log.d(TAG, "SocketClient run: ");
                 // 채팅 서버에 접속 ( 연결 )  ( 서버쪽 ip와 포트 )
-                socket = new Socket("172.30.1.55",6075);
+                socket = new Socket("172.30.1.18",6075);
 
                 // 메세지를 서버에 전달 할 수 있는 통로 ( 만들기 )
                 out = new DataOutputStream(socket.getOutputStream());
