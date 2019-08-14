@@ -10,6 +10,8 @@ import com.example.retrofitexample.Board.BoardActivity;
 import com.example.retrofitexample.BoxOffice.ProfileActivity;
 import com.example.retrofitexample.R;
 
+import static com.example.retrofitexample.BoxOffice.ProfileActivity.loggedUseremail;
+
 public class StreamingListActivity extends AppCompatActivity {
 
     Button btnStart;
@@ -29,6 +31,8 @@ public class StreamingListActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(StreamingListActivity.this, StreamingActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.putExtra("roomName", "temp");
+                intent.putExtra("roomHost", loggedUseremail);
                 startActivity(intent);
                 overridePendingTransition(0,0);
             }

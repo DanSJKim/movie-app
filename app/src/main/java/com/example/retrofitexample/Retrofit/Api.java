@@ -20,6 +20,8 @@ import com.example.retrofitexample.Map.TheaterDetailResponse;
 import com.example.retrofitexample.Map.TheaterResponse;
 import com.example.retrofitexample.MovieSearch.SearchResponse;
 import com.example.retrofitexample.MyPage.MyPage_Img;
+import com.example.retrofitexample.Streaming.Model.StreamingListContent;
+import com.example.retrofitexample.Streaming.Model.StreamingListResponse;
 
 import java.util.List;
 
@@ -232,5 +234,17 @@ public interface Api {
     @POST("retrofit/chat/countNewMessage.php")
     Call<MessageContent> countNewMessage(@Field("myEmail") String myEmail, @Field("roomNo") int roomNo);
 
+    // 스트리밍 방 만들기
+    @FormUrlEncoded
+    @POST("retrofit/streaming/createStreamingRoom.php")
+    Call<StreamingListContent> createStreamingRoom(@Field("userEmail") String userEmail, @Field("roomName") String roomName);
 
+    // 스트리밍 방 삭제하기
+    @FormUrlEncoded
+    @POST("retrofit/streaming/deleteStreamingRoom.php")
+    Call<StreamingListContent> deleteStreamingRoom(@Field("userEmail") String userEmail);
+
+    // 스트리밍 방 목록 불러오기
+    @GET("retrofit/streaming/getStreamingList.php")
+    Call<StreamingListResponse> getStreamingList();
 }

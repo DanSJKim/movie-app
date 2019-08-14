@@ -30,8 +30,9 @@ android {
         }
     }
     compileOptions {
-        targetCompatibility 1.8
         sourceCompatibility 1.8
+        targetCompatibility 1.8
+
     }
 }
 
@@ -69,6 +70,13 @@ dependencies {
     implementation files('libs/autobanh.jar')
 
     // The GoCoder SDK library dependency declaration
-    //implementation 'com.wowza.gocoder.sdk.android:com.wowza.gocoder.sdk:2.0.0@aar'
+    implementation 'com.wowza.gocoder.sdk.android:com.wowza.gocoder.sdk:2.0.0@aar'
     implementation 'org.webrtc:google-webrtc:1.0.+'
+
+    // ExoPlayer 관련 빌드
+    def exoplayer_version = '2.9.3'
+    implementation "com.google.android.exoplayer:exoplayer-core:$exoplayer_version"
+    implementation "com.google.android.exoplayer:exoplayer-ui:$exoplayer_version"
+    // m3u8 파일을 사용할 예정이기 때문에 HLS(Http Live Streaming) 를 사용할 수 있는 라이브러리를 추가해 준다.
+    implementation "com.google.android.exoplayer:exoplayer-hls:$exoplayer_version"
 }
