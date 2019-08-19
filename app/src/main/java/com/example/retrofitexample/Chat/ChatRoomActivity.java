@@ -273,18 +273,14 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
 //            Intent callIntent = new Intent(ChatRoomActivity.this, ConnectActivity.class);
 //            callIntent.setAction(Intent.ACTION_GET_CONTENT);
 //            startActivity(callIntent);
-
-
         }
     }
 
     // 상대방 메세지 카운트 0으로 감소시키기
     public void checkMessageCount(){
-
         Api api = ApiClient.getClient().create(Api.class);
         Log.d(TAG, "checkMessageCount: mail: " + loggedUseremail);
         Log.d(TAG, "checkMessageCount: roomno: " + roomNo);
-
 
         Call<MessageContent> call = api.checkMessageCount(loggedUseremail, roomNo);
         call.enqueue(new Callback<MessageContent>() {
@@ -1021,15 +1017,6 @@ public class ChatRoomActivity extends AppCompatActivity implements ChatService.S
     @Override
     public void onBackPressed() {
         Log.d(TAG, "onBackPressed() called");
-
-        // Unbind from service
-//        if (isService) {
-//            Log.d(TAG, "onBackPressed(): unbind");
-//            currentRoomNo = -1;
-//            myService.setCallbacks(null); // unregister
-//            unbindService(conn);
-//            //isService = false;
-//        }
 
         if(backbuttonflag == 1){
             Log.d(TAG, "onBackPressed: 1");

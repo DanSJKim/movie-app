@@ -36,12 +36,15 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar"
         android:usesCleartextTraffic="true">
-        <activity android:name=".Streaming.PlayStreamingActivity"></activity>
+        <activity android:name=".Streaming.CreateStreamingActivity"></activity>
+        <activity android:name=".Streaming.PlayStreamingActivity" />
         <activity android:name=".Streaming.PlayerActivity" />
         <activity android:name=".Streaming.StreamingListActivity" />
         <activity
             android:name=".Streaming.StreamingActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize" />
+            android:launchMode="singleTop"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            />
         <activity android:name=".VideoCall.ReceiveCallActivity" />
         <activity android:name=".Chat.ChatImageDetailActivity" />
 

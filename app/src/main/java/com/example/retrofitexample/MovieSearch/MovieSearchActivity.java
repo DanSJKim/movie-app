@@ -97,7 +97,6 @@ public class MovieSearchActivity extends AppCompatActivity implements DataAdapte
         mRecyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(layoutManager);
-
     }
 
     private void firstloadJSON(){

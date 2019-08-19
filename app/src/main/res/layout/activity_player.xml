@@ -5,16 +5,53 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Streaming.PlayerActivity"
-    xmlns:wowza="http://schemas.android.com/apk/res-auto">
+    xmlns:wowza="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
 
-
-    <com.wowza.gocoder.sdk.api.player.WOWZPlayerView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/vwStreamPlayer"
-        android:layout_alignParentStart="false"
-        android:layout_centerInParent="true"
-        wowza:frameSizePreset="frameSize1280x720"/>
+        android:layout_weight="1">
+
+        <com.wowza.gocoder.sdk.api.player.WOWZPlayerView
+            android:id="@+id/vwStreamPlayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="false"
+            android:layout_centerInParent="true"
+            wowza:frameSizePreset="frameSize1280x720" />
+
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_gravity="bottom"
+            android:id="@+id/rvPlayerChat">
+
+        </android.support.v7.widget.RecyclerView>
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:layout_weight="11">
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:id="@+id/etPlayerChatContent"/>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="4"
+            android:id="@+id/btnPlayerChatSend"/>
+
+    </LinearLayout>
+
+
 
     <!--<com.google.android.exoplayer2.ui.PlayerView-->
         <!--android:id="@+id/exoPlayerView"-->

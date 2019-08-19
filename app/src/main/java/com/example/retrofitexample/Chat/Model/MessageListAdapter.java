@@ -18,6 +18,10 @@ import java.util.ArrayList;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
+
+/**
+ * 채팅방 리스트 어댑터
+ */
 public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.MessageListViewHolder> {
 
     private ArrayList<MessageListContent> mList;

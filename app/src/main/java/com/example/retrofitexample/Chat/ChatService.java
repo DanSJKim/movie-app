@@ -116,7 +116,7 @@ public class ChatService extends Service {
     }
 
 
-    String getMsg() { // 값을 리턴하는 메서드
+    public String getMsg() { // 값을 리턴하는 메서드
         return receivedMsg;
     }
 
@@ -165,7 +165,7 @@ public class ChatService extends Service {
             try {
                 Log.d(TAG, "SocketClient run: ");
                 // 채팅 서버에 접속 ( 연결 )  ( 서버쪽 ip와 포트 )
-                socket = new Socket("172.30.1.18",6075);
+                socket = new Socket("192.168.0.70",6075);
 
                 // 메세지를 서버에 전달 할 수 있는 통로 ( 만들기 )
                 out = new DataOutputStream(socket.getOutputStream());
@@ -195,7 +195,7 @@ public class ChatService extends Service {
 
 
 
-    // ( 메세지 수신용 )   -  서버로부터 받아서, 핸들러에서 처리하도록 할 거.
+    // ( 메세지 수신용 )
     class ReceiveThread extends Thread{
 
         Socket rcSocket = null;
@@ -204,12 +204,12 @@ public class ChatService extends Service {
         public ReceiveThread(Socket socket) {
             this.rcSocket = socket;
 
-            Log.d(TAG, "ReceiveThread: ");
+            Log.d(TAG, "ReceiveThread: 메세지 수신 1: 서버로 부터 메세지 수신");
             try {
 
                 // 채팅 서버로부터 메세지를 받기 위한 스트림 생성.
                 input = new DataInputStream(socket.getInputStream());
-                Log.d(TAG, "ReceiveThread: input: " + input);
+                Log.d(TAG, "ReceiveThread: input:  채팅 서버로부터 메세지를 받기 위한 스트림 " + input);
             }catch (Exception e){
 
                 e.printStackTrace();
@@ -224,7 +224,7 @@ public class ChatService extends Service {
 
                     // 채팅 서버로 부터 받은 메세지
                     receivedMsg =input.readUTF();
-                    Log.d(TAG, "수신 메세지: " + receivedMsg);
+                    Log.d(TAG, "수신한 메세지 내용: " + receivedMsg);
 
                     if (receivedMsg != null){
 
@@ -237,154 +237,151 @@ public class ChatService extends Service {
                             String mode = jsonObject.getString("mode");
                             int modeToInt = Integer.parseInt(mode);
 
+                                // 사용자가 현재 보고 있는 액티비티
+                                Log.d(TAG, "run: 현재 사용자 방 번호: " + currentRoomNo);
 
-                            // 사용자가 현재 보고 있는 액티비티
-                            Log.d(TAG, "run: currentRoomNo: " + currentRoomNo);
+                                // 보낸 쪽의 방 번호와 사용자가 보고 있는 액티비티가 일치하거나 대기실일때 실행한다.
+                                if((roomNoToInt == currentRoomNo) || (currentRoomNo == 0)){
+                                    Log.d(TAG, "run: 사용자가 보고 있는 방 번호와 보낸 메세지의 방 번호가 일치하거나 대기실일 때 ChatdoSomething 호출 " + serviceCallbacks);
 
-                            // 보낸 쪽의 방 번호와 사용자가 보고 있는 액티비티가 일치하거나 대기실일때 실행한다.
-                            if((roomNoToInt == currentRoomNo) || (currentRoomNo == 0)){
-                                Log.d(TAG, "run: is chatlist or chatroom " + serviceCallbacks);
+                                        // 영상통화할 때 serviceCallbacks가 null이어서 콜백이 호출되지 않는다.
+                                        if(serviceCallbacks!=null){
 
-                                // 영상통화할 때 serviceCallbacks가 null이어서 콜백이 호출되지 않는다.
-                                if(serviceCallbacks!=null){
+                                            serviceCallbacks.ChatdoSomething();
+                                        }
+                                }
+
+                                if(currentRoomNo == -2 && modeToInt == 5){
+                                    Log.d(TAG, "run: 영상채팅 메세지를 수신한 사람이 영상통화 화면일 때 종료메세지를 전송");
+                                    String senderEmail = jsonObject.getString("myEmail");
+                                    String receiverEmail = jsonObject.getString("yourEmail");
+                                    String message = jsonObject.getString("message");
+                                    String date = jsonObject.getString("date");
+                                    String time = jsonObject.getString("time");
+                                    Log.d(TAG, "run: senderEmail: " + senderEmail);
+                                    Log.d(TAG, "run: receiverEmail: " + receiverEmail);
+
+
+                                    // mode, roomno, myemail, youremail, message, date, time
+                                    // 통화를 종료시킨 사람이 sender 종료 알림을 받는 사람이 receiver
+                                    sendMessageToMySQL(5, roomNoToInt, senderEmail, receiverEmail, "영상통화 종료", date, time);
+                                    serviceCallbacks.ChatdoSomething();
+
+
+                                }else if(currentRoomNo == -2 && modeToInt == 6){
+                                    Log.d(TAG, "run: 영상채팅 메세지 수신 거절 메세지를 수신했을 때");
+                                    String senderEmail = jsonObject.getString("myEmail");
+                                    String receiverEmail = jsonObject.getString("yourEmail");
+                                    String message = jsonObject.getString("message");
+                                    String date = jsonObject.getString("date");
+                                    String time = jsonObject.getString("time");
+                                    Log.d(TAG, "run: senderEmail: " + senderEmail);
+                                    Log.d(TAG, "run: receiverEmail: " + receiverEmail);
+
+                                    // mode, roomno, myemail, youremail, message, date, time
+                                    // 통화를 종료시킨 사람이 sender 종료 알림을 받는 사람이 receiver
+                                    sendMessageToMySQL(5, roomNoToInt, senderEmail, receiverEmail, "영상통화 취소", date, time);
                                     serviceCallbacks.ChatdoSomething();
                                 }
 
-                            }
+                                // 영상통화 수신 화면, 취소 메세지일 경우
+                                if(currentRoomNo == -3 && modeToInt == 5){
+                                    Log.d(TAG, "run: is receivecallactivity");
+                                    String senderEmail = jsonObject.getString("myEmail");
+                                    String receiverEmail = jsonObject.getString("yourEmail");
+                                    String message = jsonObject.getString("message");
+                                    String date = jsonObject.getString("date");
+                                    String time = jsonObject.getString("time");
 
-                            // 영상채팅 메세지를 수신한 사람이 영상통화 화면일 때 종료메세지를 전송
-                            if(currentRoomNo == -2 && modeToInt == 5){
-                                Log.d(TAG, "run: is callactivity");
-                                String senderEmail = jsonObject.getString("myEmail");
-                                String receiverEmail = jsonObject.getString("yourEmail");
-                                String message = jsonObject.getString("message");
-                                String date = jsonObject.getString("date");
-                                String time = jsonObject.getString("time");
-                                Log.d(TAG, "run: senderEmail: " + senderEmail);
-                                Log.d(TAG, "run: receiverEmail: " + receiverEmail);
+                                    // mode, roomno, myemail, youremail, message, date, time
+                                    sendMessageToMySQL(5, roomNoToInt, senderEmail, receiverEmail, "영상통화 취소", date, time);
 
+                                    serviceCallbacks.ChatdoSomething();
 
-                                // mode, roomno, myemail, youremail, message, date, time
-                                // 통화를 종료시킨 사람이 sender 종료 알림을 받는 사람이 receiver
-                                sendMessageToMySQL(5, roomNoToInt, senderEmail, receiverEmail, "영상통화 종료", date, time);
-                                serviceCallbacks.ChatdoSomething();
+                                }
 
-                            // 영상채팅 메세지 수신 거절 메세지를 수신했을 때
-                            }else if(currentRoomNo == -2 && modeToInt == 6){
-                                Log.d(TAG, "run: is callactivity");
-                                String senderEmail = jsonObject.getString("myEmail");
-                                String receiverEmail = jsonObject.getString("yourEmail");
-                                String message = jsonObject.getString("message");
-                                String date = jsonObject.getString("date");
-                                String time = jsonObject.getString("time");
-                                Log.d(TAG, "run: senderEmail: " + senderEmail);
-                                Log.d(TAG, "run: receiverEmail: " + receiverEmail);
+                                // 채팅방이나 채팅목록 화면이 아닐 때, 영상통화 발신, 취소 메세지, 스트리밍방 메세지가 아닐 때 알림을 실행
+                                if((roomNoToInt != currentRoomNo) && (currentRoomNo != 0) && (currentRoomNo != -2) && (modeToInt != 4) && (modeToInt != 3) && (modeToInt != 5) && (modeToInt != 6) && (modeToInt != 8)){
+                                    Log.d(TAG, "run: no chatlist, chatroom");
 
+                                    String myEmail = jsonObject.getString("myEmail"); // 메세지 작성자의 이메일
+                                    String message = jsonObject.getString("message");
 
-                                // mode, roomno, myemail, youremail, message, date, time
-                                // 통화를 종료시킨 사람이 sender 종료 알림을 받는 사람이 receiver
-                                sendMessageToMySQL(5, roomNoToInt, senderEmail, receiverEmail, "영상통화 취소", date, time);
-                                serviceCallbacks.ChatdoSomething();
-                            }
+                                    // 오레오에 대응하기 위한 notification channel 생성
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        /**
+                                         * 오레오 이상 노티처리
+                                         */
 
-                            // 영상통화 수신 화면, 취소 메세지일 경우
-                            if(currentRoomNo == -3 && modeToInt == 5){
-                                Log.d(TAG, "run: is receivecallactivity");
-                                String senderEmail = jsonObject.getString("myEmail");
-                                String receiverEmail = jsonObject.getString("yourEmail");
-                                String message = jsonObject.getString("message");
-                                String date = jsonObject.getString("date");
-                                String time = jsonObject.getString("time");
+                                        /**
+                                         * 오레오 버전부터 노티를 처리하려면 채널이 존재해야합니다.
+                                         */
 
-                                // mode, roomno, myemail, youremail, message, date, time
-                                sendMessageToMySQL(5, roomNoToInt, senderEmail, receiverEmail, "영상통화 취소", date, time);
+                                        int importance = NotificationManager.IMPORTANCE_HIGH;
+                                        String Noti_Channel_ID = "Noti";
+                                        String Noti_Channel_Group_ID = "Noti_Group";
 
-                                serviceCallbacks.ChatdoSomething();
+                                        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                        NotificationChannel notificationChannel = new NotificationChannel(Noti_Channel_ID,Noti_Channel_Group_ID,importance);
 
-                            }
+    //                    notificationManager.deleteNotificationChannel("testid"); 채널삭제
 
-                            // 채팅방이나 채팅목록 화면이 아닐 때, 영상통화 발신, 취소 메세지가 아닐 때 알림을 실행
-                            if((roomNoToInt != currentRoomNo) && (currentRoomNo != 0) && (currentRoomNo != -2) && (modeToInt != 4) && (modeToInt != 3) && (modeToInt != 5) && (modeToInt != 6)){
-                                Log.d(TAG, "run: no chatlist, chatroom");
+                                        /**
+                                         * 채널이 있는지 체크해서 없을경우 만들고 있으면 채널을 재사용 한다.
+                                         */
+                                        if(notificationManager.getNotificationChannel(Noti_Channel_ID) != null){
+                                            Log.d(TAG, "run: 채널이 이미 존재 한다.");
+                                        }
+                                        else{
+                                            Log.d(TAG, "run: 채널이 없어서 만든다.");
+                                            notificationManager.createNotificationChannel(notificationChannel);
+                                        }
 
-                                String myEmail = jsonObject.getString("myEmail"); // 메세지 작성자의 이메일
-                                String message = jsonObject.getString("message");
-
-                                // 오레오에 대응하기 위한 notification channel 생성
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    /**
-                                     * 오레오 이상 노티처리
-                                     */
-
-                                    /**
-                                     * 오레오 버전부터 노티를 처리하려면 채널이 존재해야합니다.
-                                     */
-
-                                    int importance = NotificationManager.IMPORTANCE_HIGH;
-                                    String Noti_Channel_ID = "Noti";
-                                    String Noti_Channel_Group_ID = "Noti_Group";
-
-                                    NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                                    NotificationChannel notificationChannel = new NotificationChannel(Noti_Channel_ID,Noti_Channel_Group_ID,importance);
-
-//                    notificationManager.deleteNotificationChannel("testid"); 채널삭제
-
-                                    /**
-                                     * 채널이 있는지 체크해서 없을경우 만들고 있으면 채널을 재사용 한다.
-                                     */
-                                    if(notificationManager.getNotificationChannel(Noti_Channel_ID) != null){
-                                        Log.d(TAG, "run: 채널이 이미 존재 한다.");
-                                    }
-                                    else{
-                                        Log.d(TAG, "run: 채널이 없어서 만든다.");
                                         notificationManager.createNotificationChannel(notificationChannel);
-                                    }
+    //                    Log.e("로그확인","===="+notificationManager.getNotificationChannel("testid1"));
+    //                    notificationManager.getNotificationChannel("testid");
 
-                                    notificationManager.createNotificationChannel(notificationChannel);
-//                    Log.e("로그확인","===="+notificationManager.getNotificationChannel("testid1"));
-//                    notificationManager.getNotificationChannel("testid");
+                                        // 클릭 시 실행 할 액티비티
+                                        Log.d(TAG, "run: Service roomNoToInt: " + roomNoToInt);
+                                        Intent intent = new Intent(ChatService.this, ChatRoomActivity.class);
+                                        intent.putExtra("roomNo", roomNoToInt);
+                                        intent.putExtra("yourEmail", myEmail);
+                                        intent.putExtra("backbuttonflag", 1);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                                        PendingIntent pendingIntent = PendingIntent.getActivity(ChatService.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                                    // 클릭 시 실행 할 액티비티
-                                    Log.d(TAG, "run: Service roomNoToInt: " + roomNoToInt);
-                                    Intent intent = new Intent(ChatService.this, ChatRoomActivity.class);
-                                    intent.putExtra("roomNo", roomNoToInt);
-                                    intent.putExtra("yourEmail", myEmail);
-                                    intent.putExtra("backbuttonflag", 1);
-                                    intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                                    PendingIntent pendingIntent = PendingIntent.getActivity(ChatService.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),Noti_Channel_ID)
+                                                .setLargeIcon(null).setSmallIcon(R.mipmap.ic_launcher)
+                                                .setWhen(System.currentTimeMillis()).setShowWhen(true).
+                                                        setAutoCancel(true).setPriority(NotificationCompat.PRIORITY_MAX)
+                                                .setContentTitle(myEmail)
+                                                .setContentText(message)
+                                                .setContentIntent(pendingIntent);
 
-                                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),Noti_Channel_ID)
-                                            .setLargeIcon(null).setSmallIcon(R.mipmap.ic_launcher)
-                                            .setWhen(System.currentTimeMillis()).setShowWhen(true).
-                                                    setAutoCancel(true).setPriority(NotificationCompat.PRIORITY_MAX)
-                                            .setContentTitle(myEmail)
-                                            .setContentText(message)
-                                            .setContentIntent(pendingIntent);
+                                        notificationManager.notify(i,builder.build());
+                                        i++;
+                                    } //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) 끝
+                                } //if((roomNoToInt != currentRoomNo) && (currentRoomNo != 0)) 끝
 
-                                    notificationManager.notify(i,builder.build());
-                                    i++;
-                                } //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) 끝
-                            } //if((roomNoToInt != currentRoomNo) && (currentRoomNo != 0)) 끝
+                                if(modeToInt == 4){
+                                    Log.d(TAG, "run: mode is: " + modeToInt);
+                                    String callID = jsonObject.getString("callID");
 
-                            if(modeToInt == 4){
-                                Log.d(TAG, "run: mode is: " + modeToInt);
-                                String callID = jsonObject.getString("callID");
+                                    String senderEmail = jsonObject.getString("myEmail");
+                                    String senderProfile = jsonObject.getString("myProfile");
 
-                                String senderEmail = jsonObject.getString("myEmail");
-                                String senderProfile = jsonObject.getString("myProfile");
+                                    Intent callintent = new Intent(ChatService.this, ReceiveCallActivity.class);
+                                    callintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    callintent.putExtra("senderEmail", senderEmail);
+                                    callintent.putExtra("senderProfile", senderProfile);
+                                    callintent.putExtra("callID", callID);
+                                    callintent.putExtra("roomNo", roomNoToInt);
+                                    startActivity(callintent);
+                                }
 
-                                Intent callintent = new Intent(ChatService.this, ReceiveCallActivity.class);
-                                callintent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                callintent.putExtra("senderEmail", senderEmail);
-                                callintent.putExtra("senderProfile", senderProfile);
-                                callintent.putExtra("callID", callID);
-                                callintent.putExtra("roomNo", roomNoToInt);
-                                startActivity(callintent);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
 
                             //Log.e("My App", "Could not parse malformed JSON: \"" + receivedMsg + "\"");
                     }
