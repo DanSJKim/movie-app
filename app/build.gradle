@@ -71,7 +71,6 @@ dependencies {
 
     // The GoCoder SDK library dependency declaration
     implementation 'com.wowza.gocoder.sdk.android:com.wowza.gocoder.sdk:2.0.0@aar'
-    implementation 'org.webrtc:google-webrtc:1.0.+'
 
     // ExoPlayer 관련 빌드
     def exoplayer_version = '2.9.3'

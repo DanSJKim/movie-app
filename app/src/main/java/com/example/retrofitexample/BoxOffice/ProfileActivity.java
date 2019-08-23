@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.retrofitexample.Board.BoardActivity;
+import com.example.retrofitexample.BoxOffice.Wallet.WalletActivity;
 import com.example.retrofitexample.Chat.ChatActivity;
 import com.example.retrofitexample.Chat.ChatService;
 import com.example.retrofitexample.GlideApp;
