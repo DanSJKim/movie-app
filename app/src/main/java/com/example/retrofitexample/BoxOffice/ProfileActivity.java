@@ -216,9 +216,14 @@ public class ProfileActivity extends AppCompatActivity {
                         stopService(intent);
                         return true;
 
+                    case R.id.wallet:
+
+                        Intent intent2 = new Intent(ProfileActivity.this, WalletActivity.class);
+                        startActivity(intent2);
                     default:
                         return true;
                 }
+
             }
 
             //드로어3. 마지막으로 메뉴 리소스 파일에 지정된 항목에 올바르게 응답하는 'onOptionsItemSelected ()'메서드를 아래쪽에 재정의 한다.
