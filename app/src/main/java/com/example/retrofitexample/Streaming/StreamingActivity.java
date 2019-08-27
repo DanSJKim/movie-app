@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -13,6 +14,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -26,6 +28,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.example.retrofitexample.BoxOffice.Wallet.config;
 import com.example.retrofitexample.Chat.ChatService;
 import com.example.retrofitexample.LoginRegister.SharedPref;
 import com.example.retrofitexample.R;
@@ -52,11 +55,28 @@ import com.wowza.gocoder.sdk.api.status.WOWZStatusCallback;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.web3j.crypto.CipherException;
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.Web3j;
+import org.web3j.utils.Convert;
 
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Map;
 
+import info.bcdev.librarysdkew.GetCredentials;
+import info.bcdev.librarysdkew.interfaces.callback.CBBip44;
+import info.bcdev.librarysdkew.interfaces.callback.CBGetCredential;
+import info.bcdev.librarysdkew.interfaces.callback.CBLoadSmartContract;
+import info.bcdev.librarysdkew.smartcontract.LoadSmartContract;
+import info.bcdev.librarysdkew.utils.InfoDialog;
+import info.bcdev.librarysdkew.utils.ToastMsg;
+import info.bcdev.librarysdkew.wallet.SendingToken;
+import info.bcdev.librarysdkew.web3j.Initiate;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -72,7 +92,7 @@ import static com.example.retrofitexample.Streaming.StreamingListActivity.roomco
  * 방송 시작하는 액티비티
  * 앱에서 방송 시작 버튼을 클릭하기 전에 Wowza Streaming Cloud 또는 Wowza Streaming Engine에서 라이브 스트림을 시작하자.
  */
-public class StreamingActivity extends AppCompatActivity implements WOWZStatusCallback, View.OnClickListener, ChatService.ServiceCallbacks, WOWZRenderAPI.VideoFrameListener {
+public class StreamingActivity extends AppCompatActivity implements WOWZStatusCallback, View.OnClickListener, ChatService.ServiceCallbacks, WOWZRenderAPI.VideoFrameListener, CBGetCredential, CBLoadSmartContract, CBBip44 {
 
     private static final String TAG = "StreamingActivity: ";
 
@@ -111,7 +131,7 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
 
     //채팅
     EditText etMessage; // 채팅 메세지
-    Button btnSend; // 채팅 전송
+    ImageView ivSend; // 채팅 전송
     SendThread send; // 메세지 전송 스레드
     String profileImage; //SharedPreference로 부터 가져온 내 이미지
 
@@ -123,6 +143,7 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
 
     int roomNo; // 현재 방 번호
 
+
     int broadcastFinish; // 방송 나가기 버튼을 눌러서 액티비티를 종료하기 전에 나가기 버튼을 눌러서 종료하는것인지 확인하기 위한 변수
 
     Button broadcastButton; // 방송 시작 버튼
@@ -131,6 +152,32 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
     String streamname;
     String username;
     String password;
+
+    // 지갑
+    private InfoDialog mInfoDialog; // 지갑 불러오기 다이얼로그
+
+    private Credentials mCredentials; // 자격 증명
+
+    private String mPasswordwallet = config.passwordwallet(); // 지갑 비밀번호
+
+    private File keydir; // 키 경로
+
+    private String mSmartcontract = config.addresssmartcontract(1); // 스마트 컨트랙트 주소
+
+    private String mNodeUrl = config.addressethnode(2); // 테스트넷 주소
+
+    private Web3j mWeb3j; // 테스트넷 라이브러리
+
+    private BigInteger mGasPrice; // 가스 비용
+
+    private BigInteger mGasLimit; // 가스 제한
+
+    AlertDialog.Builder builder; // 토큰 보내기 다이얼로그
+    AlertDialog ad;
+
+    String balance; // 나의 토큰 잔액
+
+    ImageView ivChatVisible;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -240,7 +287,7 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
 
         //채팅
         etMessage = (EditText) findViewById(R.id.etStreamingChatContent); // 채팅 내용
-        btnSend = (Button) findViewById(R.id.btnStreamingChatSend); // 채팅 전송
+        ivSend = (ImageView) findViewById(R.id.ivStreamingChatSend); // 채팅 전송
         mArrayList = new ArrayList<>();
 
         //리사이클러뷰 초기화
@@ -251,7 +298,7 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
         mAdapter = new StreamingMessageAdapter(mArrayList); // 어댑터
         mRecyclerView.setAdapter(mAdapter); // 리사이클러뷰에 어댑터 적용
 
-        btnSend.setOnClickListener(new View.OnClickListener() {
+        ivSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String message = etMessage.getText().toString(); // 채팅 메세지
@@ -266,6 +313,30 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
                     send = new SendThread(socket, 8, roomNo, loggedUseremail, message); // ChatService에서 생성한 클라이언트 소켓 변수
                     send.start();
                 }
+            }
+        });
+
+        ImageView ivWallet = (ImageView) findViewById(R.id.ivWallet);
+        ivWallet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                show();
+            }
+        });
+
+        ivChatVisible = (ImageView) findViewById(R.id.ivChatVisible);
+        ivChatVisible.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(mRecyclerView.getVisibility() == View.VISIBLE){
+                    Log.d(TAG, "onClick: 채팅 창 끄기");
+                    mRecyclerView.setVisibility(View.INVISIBLE);
+                }else if(mRecyclerView.getVisibility() == View.INVISIBLE){
+                    Log.d(TAG, "onClick: 채팅 창 켜기");
+                    mRecyclerView.setVisibility(View.VISIBLE);
+                }
+
             }
         });
 
@@ -492,11 +563,13 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
 
                 // 서비스로 부터 받은 메세지 내용
                 String msg = myService.getMsg();
-                Log.d(TAG, "ChatdoSomething: msg: " + msg);
+                Log.d(TAG, "ChatdoSomething: 서비스로 부터 받은 메세지 내용 msg: " + msg);
+
+                final String walletAddress = SharedPref.getInstance(this).EthAddress();// 지갑 주소
+                Log.d(TAG, "onWZStatus: 지갑 주소: " + walletAddress);
 
                 // 스트리밍이 성공적으로 시작 되면 데이터베이스에 방 정보를 저장한다.
-                createStreamingRoom(loggedUseremail, roomName);
-
+                createStreamingRoom(loggedUseremail, roomName, walletAddress);
                 break;
 
             case WOWZState.STOPPING: // 정지 중
@@ -509,6 +582,19 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
                 Log.d(TAG, "onWZStatus: 방송 중지 3: IDLE case 실행");
                 statusMessage.append("The broadcast is stopped");
                 Log.d(TAG, "onWZStatus: statusMessage: " + statusMessage);
+
+                // 방송 종료 시에 시스템 메세지를 띄워주기 위해 핸들러를 호출한다.
+                // 핸들러에게 전달할 메세지 객체
+                Message hdmg = msgHandler.obtainMessage();
+
+                // 핸들러에게 전달할 메세지의 식별자
+                hdmg.what = 4444;
+
+                // 핸들러에게 메세지 전달 ( 화면 처리 )
+                msgHandler.sendMessage(hdmg);
+
+                //데이터베이스에서 방 삭제
+                deleteStreamingRoom(loggedUseremail);
 
                 break;
 
@@ -588,19 +674,6 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
             //Stop the broadcast that is currently running
             goCoderBroadcaster.endBroadcast(this);
 
-            // 방송 종료 시에 시스템 메세지를 띄워주기 위해 핸들러를 호출한다.
-            // 핸들러에게 전달할 메세지 객체
-            Message hdmg = msgHandler.obtainMessage();
-
-            // 핸들러에게 전달할 메세지의 식별자
-            hdmg.what = 4444;
-
-            // 핸들러에게 메세지 전달 ( 화면 처리 )
-            msgHandler.sendMessage(hdmg);
-
-            //데이터베이스에서 방 삭제
-            deleteStreamingRoom(loggedUseremail);
-
         } else {
 
             Log.d(TAG, "onClick: 방송 시작 1: 방송 시작 버튼 클릭 시 방송을 시작한다.");
@@ -611,12 +684,13 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
         }
     }
 
-    public void createStreamingRoom(String userEmail, String roomName){
+    public void createStreamingRoom(String userEmail, String roomName, String walletAddress){
         Api api = ApiClient.getClient().create(Api.class);
-        Call<StreamingListContent> call = api.createStreamingRoom(userEmail, roomName);
+        Call<StreamingListContent> call = api.createStreamingRoom(userEmail, roomName, walletAddress);
         Log.d(TAG, "onWZStatus: 방송 시작 5: RUNNING case 실행 할 때 호출 한다.");
         Log.d(TAG, "createStreamingRoom: userEmail: " + userEmail);
         Log.d(TAG, "createStreamingRoom: roomName: " + roomName);
+        Log.d(TAG, "createStreamingRoom: walletAddress: " + walletAddress);
         Log.d(TAG, "createStreamingRoom: 스트리밍 방을 생성한다.");
 
 
@@ -642,16 +716,16 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
             @Override
             public void onFailure(Call<StreamingListContent> call, Throwable t) {
 
-                Log.d("방 생성 에러", t.getMessage());
+                Log.d(TAG, "방 생성 에러: " + t.getMessage());
             }
         });
     }
 
     public void deleteStreamingRoom(String userEmail){
+        Log.d(TAG, "deleteStreamingRoom: 방송 중지 3-2: 스트리밍 방을 삭제한다.");
         Api api = ApiClient.getClient().create(Api.class);
         Call<StreamingListContent> call = api.deleteStreamingRoom(userEmail);
-        Log.d(TAG, "createStreamingRoom: userEmail: " + userEmail);
-        Log.d(TAG, "createStreamingRoom: 방송 중지 3-2: 스트리밍 방을 삭제한다.");
+        Log.d(TAG, "deleteStreamingRoom: userEmail: " + userEmail);
 
         call.enqueue(new Callback<StreamingListContent>() {
             @Override
@@ -913,5 +987,96 @@ public class StreamingActivity extends AppCompatActivity implements WOWZStatusCa
 
         Log.d(TAG, "registerFrameListener: frameListener: " + frameListener);
 
+    }
+
+    // 토큰 선물하기다이얼로그
+    void show()
+    {
+        Log.d(TAG, "show: 토큰 선물 다이얼로그");
+        builder = new AlertDialog.Builder(this);
+        builder.setTitle("VitCoin (VTC)");
+        builder.setMessage("VTC 잔액: ");
+        builder.setNegativeButton("확인",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        dialog.dismiss();
+                    }
+                });
+
+
+        ad = builder.create();
+        ad.show();
+        // 지갑
+        getWeb3j();
+        keydir = this.getFilesDir();
+        getCredentials(keydir);
+    }
+
+    /* Get Web3j*/
+    private void getWeb3j(){
+        Log.e(TAG, "getWeb3j: 앱 실행 5. 이더리움 테스트넷 연결을 위한 라이브러리 실행");
+        new Initiate(mNodeUrl); // 테스트넷 주소 설정
+        mWeb3j = Initiate.sWeb3jInstance;
+    }
+
+    /* Get Credentials */
+    private void getCredentials(File keydir){
+        File[] listfiles = keydir.listFiles();
+        try {
+            Log.e(TAG, "getCredentials: 앱 실행 6.");
+            mInfoDialog = new InfoDialog(this);
+            mInfoDialog.Get("Load Wallet","Please wait few seconds");
+            GetCredentials getCredentials = new GetCredentials();
+            getCredentials.registerCallBack(this);
+            getCredentials.FromFile(listfiles[0].getAbsolutePath(),mPasswordwallet);
+        } catch (IOException e) {
+
+            Log.e(TAG, "getCredentials: IOException " + e);
+            e.printStackTrace();
+        } catch (CipherException e) {
+
+            Log.e(TAG, "getCredentials: CipherException " + e);
+            e.printStackTrace();
+        }
+    }
+
+    /*Get Token Info*/
+    private void GetTokenInfo(){
+        Log.e(TAG, "GetTokenInfo: " + "앱 실행 9. 토큰 정보 가져 오기 ");
+        mGasPrice = Convert.toWei("20",Convert.Unit.GWEI).toBigInteger();
+        mGasLimit = BigInteger.valueOf(Long.valueOf("42000"));
+        LoadSmartContract loadSmartContract = new LoadSmartContract(mWeb3j,mCredentials,mSmartcontract,mGasPrice,mGasLimit);
+        Log.e(TAG, "GetTokenInfo: mWeb3j: " + mWeb3j);
+        Log.e(TAG, "GetTokenInfo: mCredentials: " + mCredentials);
+        Log.e(TAG, "GetTokenInfo: mSmartcontract: " + mSmartcontract);
+        loadSmartContract.registerCallBack(this);
+        loadSmartContract.LoadToken();
+    }
+
+    @Override
+    public void backGeneration(Map<String, String> result, Credentials credentials) {
+        Log.d(TAG, "backGeneration: ");
+
+    }
+
+    @Override
+    public void backLoadCredential(Credentials credentials) {
+        Log.e(TAG, "backLoadCredential: 지갑 실행. 지갑을 불러 온다.");
+        mCredentials = credentials;
+        Log.e(TAG, "backLoadCredential: mCredentials: " + mCredentials);
+        mInfoDialog.Dismiss();
+        GetTokenInfo();
+    }
+
+    @Override
+    public void backLoadSmartContract(Map<String, String> result) {
+        balance = result.get("tokenbalance");
+        Log.d(TAG, "backLoadSmartContract: result.get(tokenbalance)" + balance);
+
+        // 단위 변환
+        String tokenbalance = Convert.fromWei(String.valueOf(balance), Convert.Unit.ETHER).toString();
+
+        ad.setMessage("VTC 잔액: " + tokenbalance); // 다이얼로그의
     }
 }

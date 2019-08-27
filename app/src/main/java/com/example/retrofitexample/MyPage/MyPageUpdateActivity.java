@@ -77,6 +77,7 @@ public class MyPageUpdateActivity extends AppCompatActivity {
         Submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG, "onClick: 확인 버튼 클릭");
 
                 holder_name = Name.getText().toString();
                 holder_password = Password.getText().toString();
@@ -88,6 +89,7 @@ public class MyPageUpdateActivity extends AppCompatActivity {
         Back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG, "onClick: 돌아가기 버튼 클릭");
                 finish();
             }
         });
@@ -95,6 +97,7 @@ public class MyPageUpdateActivity extends AppCompatActivity {
         Profile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG, "onClick: 프로필 사진 클릭");
                 selectImage();
             }
         });
@@ -122,12 +125,15 @@ public class MyPageUpdateActivity extends AppCompatActivity {
                     Log.d(TAG, "onResponse: response.body().getUsername(): " + user);
 
                     if(bitmap != null) {
+                        Log.d(TAG, "onResponse: bitmap != null");
                         uploadImage();
                     }else{
+                        Log.d(TAG, "onResponse: bitmap else");
                         finish();
                     }
 
                 }else{
+                    Log.e(TAG, "onResponse: else");
                     Toast.makeText(MyPageUpdateActivity.this,response.body().getMessage(),Toast.LENGTH_LONG).show();
                 }
 
@@ -135,6 +141,7 @@ public class MyPageUpdateActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Model> call, Throwable t) {
+                Log.e(TAG, "onFailure: ", t);
                 Toast.makeText(MyPageUpdateActivity.this,t.getLocalizedMessage(),Toast.LENGTH_SHORT).show();
 
             }
@@ -142,7 +149,7 @@ public class MyPageUpdateActivity extends AppCompatActivity {
     }
 
     private void uploadImage(){
-        Log.d(TAG, "uploadImage: ");
+        Log.d(TAG, "uploadImage: 이미지 업로드 메소드 실행");
 
         String image = convertToString();
         // 이미지 파일 이름 ( img_{시간}_ )
@@ -191,6 +198,7 @@ public class MyPageUpdateActivity extends AppCompatActivity {
     //Bitmap -> String 변환
     private String convertToString()
     {
+        Log.d(TAG, "convertToString: Bitmap을 String으로 변환 한다.");
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         //(압축 옵션( JPEG, PNG ), 품질 설정 ( 0 - 100까지의 int형 ), 압축된 바이트배열을 담을 stream)
         bitmap.compress(Bitmap.CompressFormat.JPEG,100,byteArrayOutputStream);
@@ -205,6 +213,7 @@ public class MyPageUpdateActivity extends AppCompatActivity {
         if(requestCode== IMAGE && resultCode==RESULT_OK && data!=null)
         {
             Uri path = data.getData();
+            Log.d(TAG, "onActivityResult: path: " + path);
 
             try {
                 bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(),path);
@@ -216,6 +225,7 @@ public class MyPageUpdateActivity extends AppCompatActivity {
                 Log.d(TAG, "onActivityResult: glide success");
 
             } catch (IOException e) {
+                Log.e(TAG, "onActivityResult: error: ", e);
                 e.printStackTrace();
             }
         }

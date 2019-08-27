@@ -21,8 +21,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.retrofitexample.BoxOffice.Wallet.config;
 import com.example.retrofitexample.Chat.ChatRoomActivity;
 import com.example.retrofitexample.Chat.ChatService;
 import com.example.retrofitexample.Chat.Model.MessageContent;
@@ -41,12 +44,35 @@ import com.wowza.gocoder.sdk.api.status.WOWZStatusCallback;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.web3j.crypto.CipherException;
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.tx.Contract;
+import org.web3j.utils.Convert;
 
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
+
+import info.bcdev.librarysdkew.GetCredentials;
+import info.bcdev.librarysdkew.interfaces.callback.CBBip44;
+import info.bcdev.librarysdkew.interfaces.callback.CBGetCredential;
+import info.bcdev.librarysdkew.interfaces.callback.CBLoadSmartContract;
+import info.bcdev.librarysdkew.interfaces.callback.CBSendingEther;
+import info.bcdev.librarysdkew.interfaces.callback.CBSendingToken;
+import info.bcdev.librarysdkew.smartcontract.LoadSmartContract;
+import info.bcdev.librarysdkew.utils.InfoDialog;
+import info.bcdev.librarysdkew.utils.ToastMsg;
+import info.bcdev.librarysdkew.wallet.SendingToken;
+import info.bcdev.librarysdkew.web3j.Initiate;
 
 import static com.example.retrofitexample.BootReceiver.isService;
 import static com.example.retrofitexample.BoxOffice.ProfileActivity.loggedUseremail;
@@ -60,16 +86,17 @@ import static com.example.retrofitexample.Streaming.StreamingListActivity.roomco
  * 방송 시청 액티비티
  */
 
-public class PlayerActivity extends AppCompatActivity implements ChatService.ServiceCallbacks{
+public class PlayerActivity extends AppCompatActivity implements ChatService.ServiceCallbacks, CBGetCredential, CBLoadSmartContract, CBBip44,CBSendingToken {
     private static final String TAG = "PlayerActivity: ";
 
     WOWZPlayerView mStreamPlayerView; // 방송 플레이어
     WOWZPlayerConfig mStreamPlayerConfig; // 방송 시청에 필요한 설정
     private ChatService myService; // 서비스
     EditText etMessage; // 채팅 메세지 입력 폼
-    Button btnSend; // 채팅 메세지 전송 버튼
+    ImageView ivSend; // 채팅 메세지 전송 버튼
     SendThread send; // 메세지 전송 스레드
     String profileImage; //SharedPreference로 부터 가져온 내 이미지
+    ImageView ivSendToken;
 
     // 리사이클러뷰 변수
     private static RecyclerView mRecyclerView;
@@ -80,6 +107,41 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
     int roomNo; // 현재 방 번호
     int pos;
 
+
+    // 토큰 관련 변수
+    String walletAddress; // 방장 지갑 주소
+
+    private InfoDialog mInfoDialog; // 지갑 불러오기 다이얼로그
+
+    private Credentials mCredentials; // 자격 증명
+
+    private String mPasswordwallet = config.passwordwallet(); // 지갑 비밀번호
+
+    private File keydir; // 키 경로
+
+    private String mSmartcontract = config.addresssmartcontract(1); // 스마트 컨트랙트 주소
+
+    private String mNodeUrl = config.addressethnode(2); // 테스트넷 주소
+
+    private Web3j mWeb3j; // 테스트넷 라이브러리
+
+    private BigInteger mGasPrice; // 가스 비용
+
+    private BigInteger mGasLimit; // 가스 제한
+
+    AlertDialog.Builder builder; // 토큰 보내기 다이얼로그
+    AlertDialog ad;
+
+    private SendingToken sendingToken; // 토큰 보내기
+
+    String balance; // 나의 토큰 잔액
+
+    public static String tokenBalance; // 선물 할 토큰 액수
+
+    private ToastMsg toastMsg; // 토스트 전송 완료 토스트 메세지
+
+    ImageView ivChatVisible;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,6 +150,8 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
 
         Intent intent = getIntent();
         roomNo = intent.getIntExtra("roomNo", -111); // 스트리밍 방 번호를 받아 온다.
+        walletAddress = intent.getStringExtra("walletAddress"); // 방장 지갑 주소
+        Log.d(TAG, "onCreate: walletAddress: " + walletAddress);
 
         currentRoomNo = roomNo; // 내가 현재 있는 위치를 스트리밍 방 번호로 변경한다.
         Log.d(TAG, "onCreate: 현재 방 번호: " + currentRoomNo);
@@ -97,7 +161,7 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
         WowzaGoCoder goCoder = WowzaGoCoder.init(getApplicationContext(), "GOSK-BE46-010C-D7F5-A882-CDEE");
 
         etMessage = (EditText) findViewById(R.id.etPlayerChatContent); // 채팅 메세지 입력 폼
-        btnSend = (Button) findViewById(R.id.btnPlayerChatSend); // 채팅 메세지 전송 버튼
+        ivSend = (ImageView) findViewById(R.id.ivPlayerChatSend); // 채팅 메세지 전송 버튼
 
         profileImage = SharedPref.getInstance(this).StoredProfileImage(); // 내 프로필 이미지
 
@@ -130,12 +194,22 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
             public void run() {
                 Log.d("Handler", "onCreate run: 방송 시청 2: play메소드를 바로 시작하면 오류가 발생하기 때문에 딜레이를 주고 play메소드를 실행한다.");
 
+                // 처음 방송 실행 시에 시스템 메세지를 띄워주기 위해 핸들러를 호출한다.
+                // 핸들러에게 전달할 메세지 객체
+                Message hdmg = msgHandler.obtainMessage();
+
+                // 핸들러에게 전달할 메세지의 식별자
+                hdmg.what = 3333;
+
+                // 핸들러에게 메세지 전달 ( 화면 처리 )
+                msgHandler.sendMessage(hdmg);
+
                 // player의 설정과
                 mStreamPlayerView.play(mStreamPlayerConfig, statusCallback/*WOWZStatusCallback*/);
             }
         }, 2000);
 
-        btnSend.setOnClickListener(new View.OnClickListener() {
+        ivSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String message = etMessage.getText().toString(); // 채팅 메세지
@@ -147,10 +221,19 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
 
                 } else {
                     Log.d(TAG, "onClick: 채팅 보내기 1: 클릭 시 SendThread 실행");
-                    send = new SendThread(socket, 8, roomNo, loggedUseremail, message); // ChatService에서 생성한 클라이언트 소켓 변수
+                    send = new SendThread(socket, 8, roomNo, profileImage, loggedUseremail, message); // ChatService에서 생성한 클라이언트 소켓 변수
                     send.start();
                 }
 
+            }
+        });
+
+        ivSendToken = (ImageView) findViewById(R.id.sendVTCToken);
+        ivSendToken.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "onClick: 별풍선 보내기 버튼 클릭");
+                show();
             }
         });
 
@@ -163,17 +246,69 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
         mAdapter = new StreamingMessageAdapter(mArrayList);
         mRecyclerView.setAdapter(mAdapter);
 
-        // 처음 방송 실행 시에 시스템 메세지를 띄워주기 위해 핸들러를 호출한다.
-        // 핸들러에게 전달할 메세지 객체
-        Message hdmg = msgHandler.obtainMessage();
+        ivChatVisible = (ImageView) findViewById(R.id.ivChatVisible);
+        ivChatVisible.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-        // 핸들러에게 전달할 메세지의 식별자
-        hdmg.what = 3333;
+                if(mRecyclerView.getVisibility() == View.VISIBLE){
+                    Log.d(TAG, "onClick: 채팅 창 끄기");
+                    mRecyclerView.setVisibility(View.INVISIBLE);
+                }else if(mRecyclerView.getVisibility() == View.INVISIBLE){
+                    Log.d(TAG, "onClick: 채팅 창 켜기");
+                    mRecyclerView.setVisibility(View.VISIBLE);
+                }
 
-        // 핸들러에게 메세지 전달 ( 화면 처리 )
-        msgHandler.sendMessage(hdmg);
-
+            }
+        });
     }
+
+    // 토큰 선물하기다이얼로그
+    void show()
+    {
+        Log.d(TAG, "show: 토큰 선물 다이얼로그");
+        final EditText edittext = new EditText(this);
+        builder = new AlertDialog.Builder(this);
+        builder.setTitle("VTC 토큰 선물하기");
+        builder.setMessage("VTC 잔액: ");
+        builder.setView(edittext);
+        edittext.setHint("선물 할 개수");
+        builder.setPositiveButton("선물 하기",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(getApplicationContext(),edittext.getText().toString() ,Toast.LENGTH_LONG).show();
+                        Log.d(TAG, "onClick: 토큰 선물하기");
+                        tokenBalance = edittext.getText().toString();
+                        Log.d(TAG, "onClick: 보낼 토큰 액수: " + tokenBalance);
+
+                        sendingToken = new SendingToken(mWeb3j,
+                                mCredentials,
+                                "0",
+                                "0");
+                        sendingToken.registerCallBackToken(PlayerActivity.this);
+                        sendingToken.Send(mSmartcontract,walletAddress,tokenBalance);
+                    }
+                });
+        builder.setNegativeButton("취소",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        dialog.dismiss();
+
+                    }
+                });
+
+
+        ad = builder.create();
+        ad.show();
+        // 지갑
+        toastMsg = new ToastMsg(); // 토스트 메세지
+        getWeb3j();
+        keydir = this.getFilesDir();
+        getCredentials(keydir);
+    }
+
+
 
     // Activity에서 Bind
     // 2-1 Connection 클래스 객체 생성 및 구현
@@ -267,11 +402,11 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
         int mode;
         int roomNo;
         String myEmail;
-        String yourEmail;
+        String profile;
         String message;
         DataOutputStream output;
 
-        public SendThread(Socket socket, int mode, int roomNo, String myEmail, String message){
+        public SendThread(Socket socket, int mode, int roomNo, String profile, String myEmail, String message){
             Log.d(TAG, "SendThread: 채팅 보내기 2: 생성자");
 
             Log.d(TAG, "SendThread: mode: " + mode);
@@ -279,6 +414,7 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
             this.mode = mode;
             this.socket = socket;
             this.roomNo = roomNo;
+            this.profile = profile;
             this.myEmail = myEmail;
             this.message = message;
             this.output = dos; // ChatService의 아웃풋스트림 변수를 가져온다.
@@ -296,7 +432,7 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
                     jo.put("mode", mode);
                     jo.put("roomNo", roomNo);
                     jo.put("myEmail", myEmail);
-                    jo.put("myProfile", profileImage);
+                    jo.put("myProfile", profile);
                     jo.put("message", message);
 
                     dos.writeUTF(jo.toString());
@@ -342,17 +478,17 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
                     int modeToInt = Integer.parseInt(mode);
                     Log.d(TAG, "handleMessage: modeToInt: " + modeToInt);
 
-                        String roomNo = jsonObject.getString("roomNo");
-                        String myEmail = jsonObject.getString("myEmail");
-                        String myProfile = jsonObject.getString("myProfile");
-                        String message = jsonObject.getString("message");
+                        String roomNo = jsonObject.getString("roomNo"); // 현재 방 번호
+                        String myEmail = jsonObject.getString("myEmail"); // 내 이메일
+                        String myProfile = jsonObject.getString("myProfile"); // 내 프로필 이미지
+                        String message = jsonObject.getString("message"); // 보낼 메세지
                         int roomNoToInt = Integer.parseInt(roomNo);
                         Log.d(TAG, "handleMessage: roomNo: " + roomNo);
                         Log.d(TAG, "handleMessage: myEmail: " + myEmail);
                         Log.d(TAG, "handleMessage: myProfile: " + myProfile);
                         Log.d(TAG, "handleMessage: message: " + message);
 
-                        //내 채팅내용 count = 메세지 읽음 표시
+                        // 리사이클러뷰 어댑터 갱신
                         StreamingMessage messageContent = new StreamingMessage(modeToInt, myProfile, myEmail, message);
                         mArrayList.add(messageContent);
                         mAdapter.notifyDataSetChanged();
@@ -432,7 +568,7 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
                 //맨 아래 아이템으로 스크롤
                 mRecyclerView.scrollToPosition(mAdapter.getItemCount()-1);
 
-            }else if(msg.what == 4444){
+            }else if(msg.what == 4444){ // 방송 종료 다이얼로그 띄우기
                 Log.d(TAG, "handleMessage: 방송 종료 2: 방송 종료 시 다이얼로그를 띄워 준다.");
                 AlertDialog alertDialog = new AlertDialog.Builder(PlayerActivity.this).create();
                 alertDialog.setTitle("방송이 종료되었습니다.");
@@ -465,6 +601,85 @@ public class PlayerActivity extends AppCompatActivity implements ChatService.Ser
             unbindService(conn);
             //isService = false;
         }
+    }
+
+    /* Get Credentials */
+    private void getCredentials(File keydir){
+        File[] listfiles = keydir.listFiles();
+        try {
+            Log.e(TAG, "getCredentials: 앱 실행 6.");
+            mInfoDialog = new InfoDialog(this);
+            mInfoDialog.Get("Load Wallet","Please wait few seconds");
+            GetCredentials getCredentials = new GetCredentials();
+            getCredentials.registerCallBack(this);
+            getCredentials.FromFile(listfiles[0].getAbsolutePath(),mPasswordwallet);
+        } catch (IOException e) {
+
+            Log.e(TAG, "getCredentials: IOException " + e);
+            e.printStackTrace();
+        } catch (CipherException e) {
+
+            Log.e(TAG, "getCredentials: CipherException " + e);
+            e.printStackTrace();
+        }
+    }
+
+    /*Get Token Info*/
+    private void GetTokenInfo(){
+        Log.e(TAG, "GetTokenInfo: " + "앱 실행 9. 토큰 정보 가져 오기 ");
+        mGasPrice = Convert.toWei("20",Convert.Unit.GWEI).toBigInteger();
+        mGasLimit = BigInteger.valueOf(Long.valueOf("42000"));
+        LoadSmartContract loadSmartContract = new LoadSmartContract(mWeb3j,mCredentials,mSmartcontract,mGasPrice,mGasLimit);
+        Log.e(TAG, "GetTokenInfo: mWeb3j: " + mWeb3j);
+        Log.e(TAG, "GetTokenInfo: mCredentials: " + mCredentials);
+        Log.e(TAG, "GetTokenInfo: mSmartcontract: " + mSmartcontract);
+        loadSmartContract.registerCallBack(this);
+        loadSmartContract.LoadToken();
+    }
+
+    /* Get Web3j*/
+    private void getWeb3j(){
+        Log.e(TAG, "getWeb3j: 앱 실행 5. 이더리움 테스트넷 연결을 위한 라이브러리 실행");
+        new Initiate(mNodeUrl); // 테스트넷 주소 설정
+        mWeb3j = Initiate.sWeb3jInstance;
+    }
+
+    @Override
+    public void backGeneration(Map<String, String> result, Credentials credentials) {
+        Log.d(TAG, "backGeneration: ");
+
+    }
+
+    @Override
+    public void backLoadCredential(Credentials credentials) {
+        Log.d(TAG, "backLoadCredential: ");
+
+        Log.e(TAG, "backLoadCredential: 앱 실행. 지갑을 불러 온다.");
+        mCredentials = credentials;
+        Log.e(TAG, "backLoadCredential: mCredentials: " + mCredentials);
+        mInfoDialog.Dismiss();
+        GetTokenInfo();
+    }
+
+    @Override
+    public void backLoadSmartContract(Map<String, String> result) { // 토큰의 잔액을 가져 온다.
+        balance = result.get("tokenbalance");
+        Log.d(TAG, "backLoadSmartContract: result.get(tokenbalance)" + balance);
+
+        // 단위 변환
+        String token = Convert.fromWei(String.valueOf(balance), Convert.Unit.ETHER).toString(); // 토큰 잔액
+
+        ad.setMessage("VTC 잔액: " + token);
+    }
+
+    @Override
+    public void backSendToken(TransactionReceipt result) {
+        Log.d(TAG, "backSendToken: 토큰 전송 완료 " + result.getTransactionHash());
+
+        send = new SendThread(socket, 8, roomNo, "Token", loggedUseremail, loggedUseremail + "님이 VTC 토큰 " + tokenBalance + " 개를 선물 했습니다."); // ChatService에서 생성한 클라이언트 소켓 변수
+        send.start();
+
+        toastMsg.Long(this,result.getTransactionHash());
     }
 }
 

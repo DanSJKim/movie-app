@@ -1,6 +1,7 @@
 package com.example.retrofitexample.Streaming.Model;
 
 import android.graphics.Color;
+import android.graphics.drawable.AnimationDrawable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,6 +17,11 @@ import java.util.ArrayList;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
+import static com.example.retrofitexample.Streaming.PlayerActivity.tokenBalance;
+
+/**
+ * 스트리밍 중에 주고 받는 채팅 메세지 리사이클러뷰 어댑터
+ */
 public class StreamingMessageAdapter extends RecyclerView.Adapter<StreamingMessageAdapter.ViewHolder> {
     private ArrayList<StreamingMessage> mArrayList;
 
@@ -55,20 +61,43 @@ public class StreamingMessageAdapter extends RecyclerView.Adapter<StreamingMessa
                 .override(300, 400)
                 .into(viewHolder.civProfile);
 
-        if(mArrayList.get(i).getSenderEmail().equals("Server")){
-            Log.d(TAG, "onBindViewHolder: 메세지 발신자가 Server일 경우 프로필 사진과 이름을 없앤다.");
-            viewHolder.civProfile.setVisibility(View.GONE);
-            viewHolder.tvStreamingChatName.setVisibility(View.GONE);
+        if(mArrayList.get(i).getProfile().equals("Server")){
+            Log.d(TAG, "onBindViewHolder: 메세지 발신자가 Server일 경우");
+            viewHolder.civProfile.setVisibility(View.GONE); // 프사 가리기
+            viewHolder.tvStreamingChatName.setVisibility(View.GONE); // 이름 가리기
+            viewHolder.ivBalloon.setVisibility(View.GONE); // 풍선 가리기
+            viewHolder.tvTokenCount.setVisibility(View.GONE); // 토큰 선물 개수 가리기
             viewHolder.tvStreamingChatMessage.setText(mArrayList.get(i).getMessage());
             viewHolder.tvStreamingChatMessage.setTextColor(Color.parseColor("#FFFF00"));
 
+
+        }else if(mArrayList.get(i).getProfile().equals("Token")){
+            Log.d(TAG, "onBindViewHolder: 메세지 발신자가 토큰 선물일 경우");
+            viewHolder.civProfile.setVisibility(View.GONE); // 프사 가리기
+            viewHolder.tvStreamingChatName.setVisibility(View.GONE); // 이름 가리기
+            viewHolder.ivBalloon.setVisibility(View.VISIBLE); // 풍선 표시
+            viewHolder.tvTokenCount.setVisibility(View.VISIBLE); // 토큰 선물 개수 표시
+            viewHolder.tvStreamingChatMessage.setVisibility(View.VISIBLE);
+            viewHolder.tvStreamingChatMessage.setText(mArrayList.get(i).getMessage());
+            viewHolder.tvStreamingChatMessage.setTextColor(Color.parseColor("#FFFF00"));
+
+            String[] array = mArrayList.get(i).getMessage().split(" "); // 토큰 선물 메세지를 Split 해서 토큰 선물 개수를 가져 온다.
+            viewHolder.tvTokenCount.setText(array[3]); // 토큰 선물 개수 표시
+
+            AnimationDrawable anim = (AnimationDrawable) viewHolder.ivBalloon.getBackground();
+            anim.start();
+
         }else{
             Log.d(TAG, "onBindViewHolder: 일반 채팅 메세지일 경우");
-            viewHolder.civProfile.setVisibility(View.VISIBLE);
-            viewHolder.tvStreamingChatName.setVisibility(View.VISIBLE);
+            viewHolder.civProfile.setVisibility(View.VISIBLE); // 프사 표시
+            viewHolder.tvStreamingChatName.setVisibility(View.VISIBLE); // 이름 표시
+            viewHolder.ivBalloon.setVisibility(View.GONE); // 풍선 가리기
+            viewHolder.tvTokenCount.setVisibility(View.GONE); // 토큰 선물개수 가리기
             viewHolder.tvStreamingChatName.setText(mArrayList.get(i).getSenderEmail());
             viewHolder.tvStreamingChatMessage.setText(mArrayList.get(i).getMessage());
             viewHolder.tvStreamingChatMessage.setTextColor(Color.parseColor("#FFFFFF"));
+
+
         }
 
 
@@ -85,6 +114,9 @@ public class StreamingMessageAdapter extends RecyclerView.Adapter<StreamingMessa
         private CircleImageView civProfile;
         private TextView tvStreamingChatName;
         private TextView tvStreamingChatMessage;
+        private ImageView ivBalloon;
+        private AnimationDrawable animationDrawable;
+        private TextView tvTokenCount;
 
         public ViewHolder(View view) {
             super(view);
@@ -94,6 +126,8 @@ public class StreamingMessageAdapter extends RecyclerView.Adapter<StreamingMessa
             civProfile = (CircleImageView) view.findViewById(R.id.civStreamingChatProfile);
             tvStreamingChatName = (TextView) view.findViewById(R.id.tvStreamingChatName);
             tvStreamingChatMessage = (TextView) view.findViewById(R.id.tvStreamingChatMessage);
+            ivBalloon = (ImageView) view.findViewById(R.id.ivStreamingBalloon);
+            tvTokenCount = (TextView) view.findViewById(R.id.tvTokenCount);
 
         }
     }

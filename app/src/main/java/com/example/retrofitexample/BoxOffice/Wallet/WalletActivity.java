@@ -3,6 +3,7 @@ package com.example.retrofitexample.BoxOffice.Wallet;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.example.retrofitexample.LoginRegister.SharedPref;
 import com.example.retrofitexample.R;
 
 import android.app.Dialog;
@@ -26,6 +27,7 @@ import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.tx.Contract;
 import org.web3j.utils.Convert;
 
 import java.io.File;
@@ -136,6 +138,11 @@ public class WalletActivity extends AppCompatActivity implements CBGetCredential
 
     private Button refresh; // 새로 고침
 
+    BigInteger GAS = Contract.GAS_LIMIT;
+    BigInteger GAS_PRICE = Contract.GAS_PRICE;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -197,6 +204,7 @@ public class WalletActivity extends AppCompatActivity implements CBGetCredential
         } else {
 
             Log.e(TAG, "onCreate: 앱 실행 6. else");
+            Log.d(TAG, "onCreate: keydir: " + keydir);
             getCredentials(keydir);
         }
     }
@@ -272,6 +280,7 @@ public class WalletActivity extends AppCompatActivity implements CBGetCredential
         File[] listfiles = keydir.listFiles();
         try {
             Log.e(TAG, "getCredentials: 앱 실행 6.");
+            Log.d(TAG, "getCredentials: listfiles: " + listfiles[0]);
             mInfoDialog.Get("Load Wallet","Please wait few seconds");
             GetCredentials getCredentials = new GetCredentials();
             getCredentials.registerCallBack(this);
@@ -308,6 +317,7 @@ public class WalletActivity extends AppCompatActivity implements CBGetCredential
     private String getEthAddress(){
         Log.e(TAG, "getEthAddress: 앱 실행 8. 이더리움 주소를 불러 온다. " + mCredentials.getAddress());
 
+        SharedPref.getInstance(WalletActivity.this).storeEthAddress(mCredentials.getAddress()); // save eth address into SharedPreferences
         return mCredentials.getAddress();
     }
 
@@ -370,8 +380,8 @@ public class WalletActivity extends AppCompatActivity implements CBGetCredential
     public void GetFee(){
         Log.e(TAG, "GetFee: 앱 실행 4. Gas(수수료) 설정 메소드");
 
-        setGasPrice(getGasPrice());
-        setGasLimit(getGasLimit());
+        setGasPrice(GAS_PRICE.toString());
+        setGasLimit(GAS.toString());
 
         BigDecimal fee = BigDecimal.valueOf(mGasPrice.doubleValue()*mGasLimit.doubleValue());
         Log.e(TAG, "GetFee: fee: " + fee);

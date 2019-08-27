@@ -5,6 +5,7 @@ public class StreamingListContent {
     String roomName;
     String roomHost;
     String streamname;
+    String walletAddress;
 
     public int getRoomNo() {
         return roomNo;
@@ -36,5 +37,13 @@ public class StreamingListContent {
 
     public void setStreamname(String streamname) {
         this.streamname = streamname;
+    }
+
+    public String getWalletAddress() {
+        return walletAddress;
+    }
+
+    public void setWalletAddress(String walletAddress) {
+        this.walletAddress = walletAddress;
     }
 }

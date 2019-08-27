@@ -40,7 +40,9 @@
         <activity android:name=".BoxOffice.Wallet.WalletActivity"></activity>
         <activity android:name=".Streaming.CreateStreamingActivity" />
         <activity android:name=".Streaming.PlayStreamingActivity" />
-        <activity android:name=".Streaming.PlayerActivity" />
+        <activity android:name=".Streaming.PlayerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:launchMode="singleTop"/>
         <activity android:name=".Streaming.StreamingListActivity" />
         <activity
             android:name=".Streaming.StreamingActivity"

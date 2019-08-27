@@ -50,7 +50,7 @@ public class StreamingListAdapter extends RecyclerView.Adapter<StreamingListAdap
         Log.d(TAG, "onBindViewHolder: ");
 
         //썸네일
-        GlideApp.with(viewHolder.itemView).load("https://cloud.wowza.com/proxy/thumbnail2/?target=13.125.122.111&app=app-fc5b&stream=fa06bb8a&fitMode=fitwidth&width=360&width=324&r=0.37134894028887855")
+        GlideApp.with(viewHolder.itemView).load("https://www.pngkey.com/png/detail/0-6579_stamp-icons-free-and-png-transparent-live-on.png")
                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .skipMemoryCache(true)
                 .override(300, 400)

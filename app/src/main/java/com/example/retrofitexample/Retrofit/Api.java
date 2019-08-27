@@ -237,7 +237,7 @@ public interface Api {
     // 스트리밍 방 만들기
     @FormUrlEncoded
     @POST("retrofit/streaming/createStreamingRoom.php")
-    Call<StreamingListContent> createStreamingRoom(@Field("userEmail") String userEmail, @Field("roomName") String roomName);
+    Call<StreamingListContent> createStreamingRoom(@Field("userEmail") String userEmail, @Field("roomName") String roomName, @Field("walletAddress") String walletAddress);
 
     // 스트리밍 방 삭제하기
     @FormUrlEncoded

@@ -49,7 +49,7 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="일일 박스오피스"
-                    android:textSize="30dp"
+                    android:textSize="25dp"
                     android:textColor="#5C5C5C"
                     android:paddingLeft="10dp"
                     android:gravity="center"/>

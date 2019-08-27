@@ -13,6 +13,7 @@ import android.widget.ImageView;
 
 import com.example.retrofitexample.BoxOffice.ProfileActivity;
 import com.example.retrofitexample.Chat.ChatActivity;
+import com.example.retrofitexample.LoginRegister.SharedPref;
 import com.example.retrofitexample.MovieSearch.DataAdapter;
 import com.example.retrofitexample.MovieSearch.MovieSearchActivity;
 import com.example.retrofitexample.MovieSearch.SearchResponse;
@@ -153,10 +154,13 @@ public class StreamingListActivity extends AppCompatActivity implements Streamin
         Log.d(TAG, "onChatListClicked: 방 번호: " + roomNo);
         String roomHost = mArrayList.get(position).getRoomHost();
         Log.d(TAG, "onChatListClicked: 방장 이름: " + roomHost);
+        String walletAddress = mArrayList.get(position).getWalletAddress();//회원 이름
+        Log.d(TAG, "onItemClicked: 지갑 주소: " + walletAddress);
 
         Intent intent = new Intent(StreamingListActivity.this, PlayerActivity.class);
         intent.putExtra("roomNo", roomNo);
         intent.putExtra("pos", position);
+        intent.putExtra("walletAddress", walletAddress);
 //        if(mArrayList.size() == 1){
 //            intent.putExtra("app", "app-fc5b");
 //            intent.putExtra("streamname", "fa06bb8a");

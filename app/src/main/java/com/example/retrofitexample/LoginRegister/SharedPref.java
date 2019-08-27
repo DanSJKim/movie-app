@@ -26,6 +26,9 @@ public class SharedPref {
     //ProfileImage
     public static final String PROFILE_IMAGE = "profileimage";
 
+    //EthWallet
+    public static final String ETH_WALLET = "ethwallet";
+
     public static SharedPref mInstance;
 
     public static Context mCtx;
@@ -108,7 +111,6 @@ public class SharedPref {
 
     }
 
-
     //Logout user
     public void logout() {
         SharedPreferences sharedPreferences = mCtx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
@@ -116,6 +118,18 @@ public class SharedPref {
         editor.clear();
         editor.commit();
         mCtx.startActivity(new Intent(mCtx, MainActivity.class));
+    }
+
+    public void storeEthAddress(String address){
+        SharedPreferences sharedPreferences = mCtx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(ETH_WALLET, address);
+        editor.commit();
+    }
+
+    public String EthAddress(){
+        SharedPreferences sharedPreferences = mCtx.getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getString(ETH_WALLET, null);
     }
 
 }

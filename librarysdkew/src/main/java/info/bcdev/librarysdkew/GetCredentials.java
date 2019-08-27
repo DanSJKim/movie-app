@@ -1,6 +1,7 @@
 package info.bcdev.librarysdkew;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -21,6 +22,7 @@ import java.util.List;
 import info.bcdev.librarysdkew.interfaces.callback.CBGetCredential;
 
 public class GetCredentials {
+    private static final String TAG = "GetCredentials";
 
     private CBGetCredential cbGetCredential;
 
@@ -50,12 +52,17 @@ public class GetCredentials {
         protected Credentials doInBackground(String... values) {
 
             File walletFile = new File(values[0]);
+            Log.d(TAG, "doInBackground: values[0]: " + values[0]);
 
             try {
+                Log.d(TAG, "doInBackground: values[1]: " + values[1]);
+                Log.d(TAG, "doInBackground: walletFile: " + walletFile);
                 return WalletUtils.loadCredentials(values[1], walletFile);
             } catch (IOException e) {
+                Log.e(TAG, "doInBackground: IOException: ", e);
                 e.printStackTrace();
             } catch (CipherException e) {
+                Log.e(TAG, "doInBackground: CipherException", e);
                 e.printStackTrace();
             }
             return null;

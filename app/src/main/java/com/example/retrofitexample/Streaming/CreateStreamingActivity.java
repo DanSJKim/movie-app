@@ -10,6 +10,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.example.retrofitexample.LoginRegister.SharedPref;
 import com.example.retrofitexample.R;
 
 /**

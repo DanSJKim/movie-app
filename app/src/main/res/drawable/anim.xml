@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:oneshot="true">
+
+    <item
+        android:drawable="@drawable/balloons0"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons1"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons2"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons3"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons4"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons5"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons6"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons7"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons8"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons9"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons10"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons11"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons12"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons13"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons14"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons15"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons16"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons17"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons18"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons19"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons20"
+        android:duration="100" />
+
+    <item
+        android:drawable="@drawable/balloons21"
+        android:duration="100" />
+
+
+</animation-list>

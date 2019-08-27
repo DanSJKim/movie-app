@@ -27,9 +27,27 @@
             android:layout_height="300dp"
             android:id="@+id/rvStreamingChat"
             android:layout_marginBottom="30dp"
-            android:layout_gravity="bottom">
+            android:layout_gravity="bottom"
+            >
 
         </android.support.v7.widget.RecyclerView>
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/chat"
+            android:layout_marginBottom="30dp"
+            android:layout_marginRight="5dp"
+            android:layout_gravity="bottom|right"
+            android:id="@+id/ivChatVisible"/>
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/balloon"
+            android:layout_gravity="right"
+            android:id="@+id/ivWallet"
+            android:layout_marginRight="180dp"/>
 
         <ImageView
             android:layout_width="50dp"
@@ -67,23 +85,21 @@
         android:layout_weight="12">
 
         <EditText
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="350dp"
+            android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:id="@+id/etStreamingChatContent"
             android:layout_gravity="bottom"
             android:layout_weight="1"/>
 
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_alignParentBottom="true"
-            android:text="전송"
-            android:id="@+id/btnStreamingChatSend"
-            android:layout_gravity="bottom|right"
-            android:layout_weight="5"/>
+            android:src="@drawable/send"
+            android:id="@+id/ivStreamingChatSend"
+            android:layout_gravity="bottom|right"/>
+
     </LinearLayout>
-
-
 
 </LinearLayout>
