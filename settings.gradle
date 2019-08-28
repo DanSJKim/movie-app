@@ -1,1 +1,1 @@
-include ':app', ':librarysdkew'
+include ':app', ':librarysdkew', ':opencv'

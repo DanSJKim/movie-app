@@ -1,9 +1,11 @@
 package com.example.retrofitexample.MyPage;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -18,17 +20,21 @@ import android.widget.Toast;
 import com.example.retrofitexample.GlideApp;
 import com.example.retrofitexample.Image.Img_Pojo;
 import com.example.retrofitexample.LoginRegister.MainActivity;
+import com.example.retrofitexample.MyPage.OpenCV.OpenCVActivity;
 import com.example.retrofitexample.Retrofit.Api;
 import com.example.retrofitexample.Retrofit.ApiClient;
 import com.example.retrofitexample.LoginRegister.Model;
 import com.example.retrofitexample.LoginRegister.SharedPref;
 import com.example.retrofitexample.R;
+import com.example.retrofitexample.Streaming.PlayerActivity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import info.bcdev.librarysdkew.utils.ToastMsg;
+import info.bcdev.librarysdkew.wallet.SendingToken;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -44,9 +50,14 @@ public class MyPageUpdateActivity extends AppCompatActivity {
     int loggedUserid;
 
     //이미지 변수
-    private  static final int IMAGE = 100;
+    private static final int IMAGE = 100;
     Bitmap bitmap;
     String responseImg;//서버로부터 응답 이미지
+
+    //OpenCV
+    private static final int OPENCV = 200;
+
+    AlertDialog.Builder builder; // 카메라 선택 다이얼로그
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +109,8 @@ public class MyPageUpdateActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "onClick: 프로필 사진 클릭");
-                selectImage();
+
+                show();
             }
         });
     }
@@ -149,7 +161,7 @@ public class MyPageUpdateActivity extends AppCompatActivity {
     }
 
     private void uploadImage(){
-        Log.d(TAG, "uploadImage: 이미지 업로드 메소드 실행");
+        Log.d(TAG, "uploadImage: 데이터베이스에 이미지 업로드");
 
         String image = convertToString();
         // 이미지 파일 이름 ( img_{시간}_ )
@@ -210,8 +222,9 @@ public class MyPageUpdateActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode== IMAGE && resultCode==RESULT_OK && data!=null)
+        if(requestCode == IMAGE && resultCode == RESULT_OK && data != null)
         {
+            Log.d(TAG, "onActivityResult: 갤러리 결과");
             Uri path = data.getData();
             Log.d(TAG, "onActivityResult: path: " + path);
 
@@ -228,7 +241,43 @@ public class MyPageUpdateActivity extends AppCompatActivity {
                 Log.e(TAG, "onActivityResult: error: ", e);
                 e.printStackTrace();
             }
+        }else if(requestCode == OPENCV && resultCode == RESULT_OK && data != null){
+            Log.d(TAG, "onActivityResult: OpenCV 결과");
         }
+    }
+
+    // 카메라 선택 다이얼로그
+    void show()
+    {
+        Log.d(TAG, "show: 이미지 업로드");
+        builder = new AlertDialog.Builder(this);
+        builder.setTitle("이미지 업로드");
+        //builder.setMessage("VTC 잔액: ");
+        builder.setPositiveButton("OPENCV",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(MyPageUpdateActivity.this, OpenCVActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(intent);
+                        overridePendingTransition(0,0);
+                        dialog.dismiss();
+                    }
+                });
+        builder.setNegativeButton("갤러리",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        selectImage();
+                        dialog.dismiss();
+                    }
+                });
+        builder.setNeutralButton("취소",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        dialog.dismiss();
+                    }
+                });
+        builder.show();
     }
 
 }

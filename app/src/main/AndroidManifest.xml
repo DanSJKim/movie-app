@@ -3,30 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.retrofitexample">
 
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- Vibration to alert user when form data is incorrect. -->
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- 부팅을 확인 할수 있는 퍼미션 등록 -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- webrtc -->
-    <uses-feature android:name="android.hardware.camera" />
-    <uses-feature android:name="android.hardware.camera.autofocus" />
-    <uses-feature
-        android:glEsVersion="0x00020000"
-        android:required="true" /> <!-- webrtc -->
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- <uses-permission android:name="android.permission.CAPTURE_VIDEO_OUTPUT" -->
-    <!-- tools:ignore="ProtectedPermissions" /> -->
-    <uses-permission android:name="android.permission.FLASHLIGHT" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
     <application
         android:name=".MyApplication"
         android:allowBackup="true"
@@ -37,12 +13,15 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar"
         android:usesCleartextTraffic="true">
-        <activity android:name=".BoxOffice.Wallet.WalletActivity"></activity>
+        <activity android:name=".MyPage.OpenCV.OpenCVActivity" android:screenOrientation="landscape"
+            android:configChanges="keyboardHidden|orientation"/>
+        <activity android:name=".BoxOffice.Wallet.WalletActivity" />
         <activity android:name=".Streaming.CreateStreamingActivity" />
         <activity android:name=".Streaming.PlayStreamingActivity" />
-        <activity android:name=".Streaming.PlayerActivity"
+        <activity
+            android:name=".Streaming.PlayerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:launchMode="singleTop"/>
+            android:launchMode="singleTop" />
         <activity android:name=".Streaming.StreamingListActivity" />
         <activity
             android:name=".Streaming.StreamingActivity"
@@ -51,39 +30,25 @@
         <activity android:name=".VideoCall.ReceiveCallActivity" />
         <activity android:name=".Chat.ChatImageDetailActivity" />
 
-        <service
-            android:name=".Chat.ChatService"
-            android:enabled="true"
-            android:exported="true" />
-
         <activity android:name=".Service.MainActivity" />
 
-        <service
-            android:name=".Service.ConnectionService"
-            android:enabled="true"
-            android:exported="true" />
-
         <activity android:name=".Chat.UserPageActivity" />
+
         <activity
             android:name=".Chat.ChatRoomActivity"
             android:launchMode="singleTop"
             android:windowSoftInputMode="stateHidden|adjustResize" />
+
         <activity android:name=".Map.TheaterDetailWebviewActivity" />
         <activity android:name=".Chat.ChatActivity" />
         <activity android:name=".Map.TheaterDetailActivity" />
-
-        <uses-library
-            android:name="org.apache.http.legacy"
-            android:required="false" />
-
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyB0-8dbNtTqog_h0RP7emGZ7gtZWqTm4Vo" />
-
         <activity android:name=".Map.MapActivity" />
         <activity android:name=".MovieSearch.MovieDetailActivity" />
+
         <activity android:name=".MovieSearch.MovieSearchActivity" />
+
         <activity android:name=".BoxOffice.CalendarActivity" />
+
         <activity android:name=".Board.BoardUpdateDetailActivity" />
         <activity android:name=".Board.BoardImageEditActivity" />
         <activity
@@ -108,16 +73,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <receiver
-            android:name=".BootReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
         <activity
             android:name=".VideoCall.ConnectActivity"
             android:label="@string/app_name"
@@ -148,6 +103,66 @@
             android:label="@string/app_name"
             android:screenOrientation="fullUser"
             android:theme="@style/CallActivityTheme" />
-    </application>
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyB0-8dbNtTqog_h0RP7emGZ7gtZWqTm4Vo" />
 
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".Chat.ChatService"
+            android:enabled="true"
+            android:exported="true" />
+        <service
+            android:name=".Service.ConnectionService"
+            android:enabled="true"
+            android:exported="true" />
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+    </application>
+    <uses-feature android:name="android.hardware.camera" /> <!-- Vibration to alert user when form data is incorrect. -->
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" /> <!-- 부팅을 확인 할수 있는 퍼미션 등록 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- webrtc -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" /> <!-- webrtc -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.BLUETOOTH" /> <!-- <uses-permission android:name="android.permission.CAPTURE_VIDEO_OUTPUT" -->
+    <!-- tools:ignore="ProtectedPermissions" /> -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <!--opencv-->
+    <uses-permission android:name="android.permission.CAMERA"/>
+<!--    <uses-feature android:name="android.hardware.camera" android:required="false"/>-->
+<!--    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>-->
+    <uses-feature android:name="android.hardware.camera.front" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.front.autofocus"  android:required="false"/>
+
+    <supports-screens android:resizeable="true"
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:anyDensity="true" />
 </manifest>
