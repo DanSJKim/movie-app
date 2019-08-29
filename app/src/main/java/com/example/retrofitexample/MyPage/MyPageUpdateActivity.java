@@ -20,6 +20,7 @@ import android.widget.Toast;
 import com.example.retrofitexample.GlideApp;
 import com.example.retrofitexample.Image.Img_Pojo;
 import com.example.retrofitexample.LoginRegister.MainActivity;
+import com.example.retrofitexample.MyPage.ImageFilters.ImageFiltersActivity;
 import com.example.retrofitexample.MyPage.OpenCV.OpenCVActivity;
 import com.example.retrofitexample.Retrofit.Api;
 import com.example.retrofitexample.Retrofit.ApiClient;
@@ -266,7 +267,11 @@ public class MyPageUpdateActivity extends AppCompatActivity {
         builder.setNegativeButton("갤러리",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        selectImage();
+                        //selectImage();
+                        Intent intent = new Intent(MyPageUpdateActivity.this, ImageFiltersActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(intent);
+                        overridePendingTransition(0,0);
                         dialog.dismiss();
                     }
                 });

@@ -4,6 +4,24 @@
     <string name="Open">Open</string>
     <string name="Close">Close</string>
 
+    <!-- imagefilters -->
+    <string name="activity_title_main">Filters</string>
+    <string name="filters">FILTERS</string>
+    <string name="edit">EDIT</string>
+
+    <string name="lbl_brightness">BRIGHTNESS</string>
+    <string name="lbl_contrast">CONTRAST</string>
+    <string name="lbl_saturation">SATURATION</string>
+    <string name="tab_filters">FILTERS</string>
+    <string name="tab_edit">EDIT</string>
+
+    <string name="roboto_medium">sans-serif-medium</string>
+    <string name="filter_normal">Normal</string>
+    <string name="action_save">SAVE</string>
+    <string name="action_open">OPEN</string>
+    <!---->
+
+
     <string name="settings_name" translatable="false">AppRTC Settings</string>
     <string name="disconnect_call">Disconnect Call</string>
     <string name="room_description">
@@ -225,4 +243,10 @@
     <string name="pref_enable_rtceventlog_key">enable_rtceventlog_key</string>
     <string name="pref_enable_rtceventlog_title">Enable RtcEventLog.</string>
     <string name="pref_enable_rtceventlog_default">false</string>
+    <string name="title_activity_image_filter">ImageFilterActivity</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
 </resources>
