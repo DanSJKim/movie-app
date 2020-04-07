@@ -2,8 +2,8 @@
 
 영화, 영화관을 주제로 다양한 기능을 구현한 프로젝트입니다.
 
-사용 기술
-Android, Java, GoogleMaps API, Retrofit,(OpenCV, WebRTC, Wowza)
+- 사용 기술
+  Android, Java, GoogleMaps API, Retrofit, PHP(OpenCV, WebRTC, Wowza)
 
 - 회원가입, 로그인
 - 일일 박스오피스 페이지
