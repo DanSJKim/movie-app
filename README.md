@@ -26,11 +26,5 @@
 - 채팅 페이지
   - Java Socket통신을 이용한 1:1 채팅 기능 구현
   - Service를 이용해 백그라운드 채팅 수신 기능 구현
-  - WebRTC를 이용해 1:1 영상 통화 기능 구현
-- 프로필 사진 업로드 페이지
-  - OpenCV를 이용한 얼굴 검출 기능 구현
-  - OpenCV JNI를 이용해 프로필 이미지 필터 기능 구현
-- 방송 스트리밍 페이지
-  - Wowza Streaming Cloud를 이용한 스트리밍 방송 구현
 
-[작품 영상](https://www.youtube.com/watch?v=uiS_6vUEy9M&t=159s)
+[작품 영상](https://youtu.be/fmyK4OE-sgE)
